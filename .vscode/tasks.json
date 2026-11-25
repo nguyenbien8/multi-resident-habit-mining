@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Chạy toàn bộ thực nghiệm (5 nhà)",
+      "type": "shell",
+      "command": "C:/Users/min/.venvs/kltn/Scripts/python.exe -m mrhabits.cli run",
+      "options": {"env": {"PYTHONPATH": "${workspaceFolder}/src"}},
+      "problemMatcher": []
+    },
+    {
+      "label": "Sinh hình và bảng cho khóa luận",
+      "type": "shell",
+      "command": "C:/Users/min/.venvs/kltn/Scripts/python.exe -m mrhabits.cli figures",
+      "options": {"env": {"PYTHONPATH": "${workspaceFolder}/src"}},
+      "problemMatcher": []
+    },
+    {
+      "label": "Kiểm thử",
+      "type": "shell",
+      "command": "C:/Users/min/.venvs/kltn/Scripts/python.exe -m pytest",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+\chapter{Kết luận và hướng phát triển}
+\label{chap:conclusion}
+
+\section{Kết luận}
+
+Khóa luận nghiên cứu bài toán học thói quen sinh hoạt của \emph{từng người} trong nhà thông minh có
+nhiều người, chỉ từ cảm biến môi trường --- nơi các sự kiện của hai người trộn vào một luồng vô danh.
+Xuất phát từ đề tài thực tập (tìm thói quen cho nhà một người) và định hướng từ luận án của
+Chen~\cite{chen2021thesis} (nhận dạng hoạt động trong nhà nhiều người), khóa luận đi tiếp theo hướng
+luận án còn bỏ ngỏ: từ nhận dạng hoạt động hiện tại sang hành vi dài hạn.
+
+Các kết quả chính:
+
+\begin{enumerate}
+  \item \textbf{Phương pháp theo vùng của đề tài thực tập không dùng được cho nhà hai người.} Trên Cairo,
+  hai người đi lại xen kẽ làm phiên bị cắt vụn, và DBSCAN gộp toàn bộ các bữa ăn cùng việc uống thuốc
+  trong vùng bếp thành một cụm duy nhất. Tách luồng theo vị trí (B1) không khắc phục được, thậm chí còn
+  làm kết quả tệ hơn.
+  \item \textbf{Học (người, hoạt động) rồi áp định nghĩa thói quen cho kết quả tốt hơn hẳn.} Ở ba nhà hai
+  người, F1 thói quen của Random Forest đạt 0,50--0,71 so với 0,22--0,33 của phương pháp thực tập; ở Cairo, Random Forest
+  tìm đủ 6/6 thói quen gắn người, trong đó có thói quen uống thuốc của R2 --- đúng trường hợp mà cách
+  tiếp cận theo vùng không thể tách được.
+  \item \textbf{Định nghĩa thói quen được hiện thực đúng nguyên văn} bằng thuật toán quét cửa sổ đếm theo
+  ngày. Ablation cho thấy DBSCAN và HDBSCAN lệch khỏi định nghĩa đáng kể ngay cả trên nhãn thật.
+  \item \textbf{Thói quen chịu được lệch giờ nhỏ và nhận thừa ngẫu nhiên, nhưng nhạy với bỏ sót, nhầm
+  người và lỗi có hệ thống.} Lỗi chính của các mô hình hiện tại là thói quen giả sinh từ lỗi nhận dạng lặp
+  lại đều đặn, không phải bỏ sót.
+  \item \textbf{Phát hiện ngày bỏ thuốc khả thi một phần}: Bi-GRU phát hiện 9/10 ngày bỏ thuốc được cài
+  nhưng còn nhiều báo động nhầm; cách tiếp cận theo vùng không phát hiện được ngày nào. Mô hình tốt nhất cho
+  thói quen (Random Forest) lại không phát hiện được sự vắng mặt --- một bài học về sự khác nhau giữa
+  ``nhận ra điều đang có'' và ``nhận ra điều đã không xảy ra''.
+\end{enumerate}
+
+\section{Hạn chế}
+
+\begin{itemize}
+  \item \textbf{Dữ liệu}: chỉ có ba nhà hai người, nhãn gắn người ít (đánh giá ``từng người'' chủ yếu dựa
+  trên Cairo), nhãn thưa và dữ liệu thu từ 2009--2011 ở Mỹ.
+  \item \textbf{Đánh giá}: một lần chia dữ liệu theo thời gian; chưa có khoảng tin cậy qua nhiều lần chia;
+  mẫu của RQ3 nhỏ và bất thường là bất thường được cài.
+  \item \textbf{Phương pháp}: bộ nhận dạng chưa được tối ưu cho mục tiêu thói quen (ít bỏ sót, ít lỗi có hệ
+  thống); bước giải mã còn đơn giản.
+\end{itemize}
+
+\section{Hướng phát triển}
+
+\textbf{Trong phạm vi khóa luận (các bản tiếp theo):}
+\begin{enumerate}
+  \item Đánh giá qua nhiều lần chia theo thời gian (cửa sổ trượt) để có khoảng tin cậy và kiểm định thống kê.
+  \item Giảm thói quen giả: giải mã có xét thời lượng hoạt động, ràng buộc ``mỗi người mỗi ngày tối đa một
+  lần thức dậy'', hoặc hiệu chỉnh ngưỡng theo mục tiêu thói quen thay vì F1 theo sự kiện.
+  \item Phân tích lỗi có hệ thống: đo xem nhầm lẫn nào (uống thuốc $\leftrightarrow$ ăn sáng, R1
+  $\leftrightarrow$ R2) sinh thói quen giả.
+  \item Mở rộng dữ liệu nếu xin được: ARAS~\cite{alemdar2013aras}, CASAS Kyoto/twor.
+\end{enumerate}
+
+\textbf{Ngoài phạm vi khóa luận} (các ứng dụng xây trên nền thói quen):
+\begin{itemize}
+  \item Hệ thống nhắc uống thuốc thật, có giao diện cho người chăm sóc.
+  \item Dự đoán hoạt động tiếp theo dựa trên thói quen~\cite{doctorarastoo2026prediction}.
+  \item Dùng mô hình ngôn ngữ để giải thích thói quen và thay đổi hành vi cho gia đình hoặc bác
+  sĩ~\cite{civitarese2026xbcd}, hoặc mô tả cảm biến bằng văn bản để chuyển sang nhà
+  mới~\cite{thukral2024tdost,fiori2026domusfm}.
+  \item Nhà từ ba người trở lên với dữ liệu như MuRAL~\cite{chen2025mural}.
+\end{itemize}

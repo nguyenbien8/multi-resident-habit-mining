@@ -1,0 +1,111 @@
+[11:17:47] cairo: 34 ngày huấn luyện, 22 ngày kiểm tra, 12 hoạt động, 6 vùng
+[11:17:49]   RQ1 B2: macro-F1 0.320, micro-F1 0.490 (2s)
+[11:19:57]   RQ1 M1: macro-F1 0.407, micro-F1 0.566 (128s)
+[11:20:48]     epoch 1: train loss 0.3587, val loss 0.3626
+[11:21:32]     epoch 2: train loss 0.1970, val loss 0.3689
+[11:22:16]     epoch 3: train loss 0.1706, val loss 0.3856
+[11:22:58]     epoch 4: train loss 0.1526, val loss 0.4447
+[11:23:52]     epoch 1: train loss 0.3440
+[11:24:00]   RQ1 M2: macro-F1 0.376, micro-F1 0.398 (243s)
+[11:24:04]   RQ2 B0: F1 0.24 (P 0.25, R 0.22); từng người F1 0.44 (2/6)
+[11:24:04]   RQ2 B1: F1 0.12 (P 0.12, R 0.11); từng người F1 0.00 (0/6)
+[11:24:04]   RQ2 B2+H: F1 0.43 (P 0.32, R 0.67); từng người F1 0.43 (3/6)
+[11:24:04]   RQ2 M1+H: F1 0.62 (P 0.45, R 1.00); từng người F1 0.75 (6/6)
+[11:24:04]   RQ2 M2+H: F1 0.37 (P 0.24, R 0.89); từng người F1 0.40 (5/6)
+[11:24:04]   RQ2 Oracle+H: F1 1.00 (P 1.00, R 1.00); từng người F1 1.00 (6/6)
+[11:25:06]   RQ3 R2_Take_Medicine: xong 5 lần cài
+[11:25:18]   Lỗi lan truyền: xong
+[11:25:18] cairo: xong sau 454s
+[11:25:20] tulum1: 50 ngày huấn luyện, 34 ngày kiểm tra, 10 hoạt động, 3 vùng
+[11:25:21]   RQ1 B2: macro-F1 0.337, micro-F1 0.450 (1s)
+[11:26:05]   RQ1 M1: macro-F1 0.435, micro-F1 0.536 (44s)
+[11:26:30]     epoch 1: train loss 0.5683, val loss 0.4670
+[11:26:55]     epoch 2: train loss 0.3407, val loss 0.4696
+[11:27:18]     epoch 3: train loss 0.2893, val loss 0.4024
+[11:27:42]     epoch 4: train loss 0.2557, val loss 0.3708
+[11:28:05]     epoch 5: train loss 0.2367, val loss 0.3897
+[11:28:27]     epoch 6: train loss 0.2248, val loss 0.3937
+[11:28:51]     epoch 7: train loss 0.2139, val loss 0.3627
+[11:29:14]     epoch 8: train loss 0.2081, val loss 0.4040
+[11:29:38]     epoch 9: train loss 0.1967, val loss 0.3915
+[11:30:02]     epoch 10: train loss 0.1912, val loss 0.4303
+[11:30:34]     epoch 1: train loss 0.5381
+[11:31:04]     epoch 2: train loss 0.3313
+[11:31:34]     epoch 3: train loss 0.2805
+[11:32:03]     epoch 4: train loss 0.2588
+[11:32:32]     epoch 5: train loss 0.2465
+[11:33:01]     epoch 6: train loss 0.2364
+[11:33:30]     epoch 7: train loss 0.2260
+[11:33:36]   RQ1 M2: macro-F1 0.438, micro-F1 0.519 (451s)
+[11:33:39]   RQ2 B0: F1 0.22 (P 0.33, R 0.17); từng người F1 0.00 (0/1)
+[11:33:39]   RQ2 B1: F1 0.22 (P 0.33, R 0.17); từng người F1 0.00 (0/1)
+[11:33:39]   RQ2 B2+H: F1 0.59 (P 0.45, R 0.83); từng người F1 0.33 (1/1)
+[11:33:39]   RQ2 M1+H: F1 0.71 (P 0.55, R 1.00); từng người F1 0.33 (1/1)
+[11:33:39]   RQ2 M2+H: F1 0.75 (P 0.60, R 1.00); từng người F1 0.33 (1/1)
+[11:33:39]   RQ2 Oracle+H: F1 1.00 (P 1.00, R 1.00); từng người F1 1.00 (1/1)
+[11:33:50]   Lỗi lan truyền: xong
+[11:33:50] tulum1: xong sau 512s
+[11:33:52] milan: 37 ngày huấn luyện, 24 ngày kiểm tra, 15 hoạt động, 7 vùng
+[11:33:53]   RQ1 B2: macro-F1 0.349, micro-F1 0.591 (2s)
+[11:34:56]   RQ1 M1: macro-F1 0.490, micro-F1 0.687 (63s)
+[11:35:20]     epoch 1: train loss 0.5837, val loss 0.4069
+[11:35:44]     epoch 2: train loss 0.3500, val loss 0.4017
+[11:36:07]     epoch 3: train loss 0.3096, val loss 0.3927
+[11:36:30]     epoch 4: train loss 0.2881, val loss 0.4128
+[11:36:54]     epoch 5: train loss 0.2719, val loss 0.4179
+[11:37:16]     epoch 6: train loss 0.2584, val loss 0.4531
+[11:37:48]     epoch 1: train loss 0.5242
+[11:38:16]     epoch 2: train loss 0.3312
+[11:38:44]     epoch 3: train loss 0.2978
+[11:38:50]   RQ1 M2: macro-F1 0.473, micro-F1 0.673 (234s)
+[11:38:54]   RQ2 B0: F1 0.38 (P 0.64, R 0.27); từng người F1 0.00 (0/0)
+[11:38:54]   RQ2 B1: F1 0.38 (P 0.64, R 0.27); từng người F1 0.00 (0/0)
+[11:38:54]   RQ2 B2+H: F1 0.40 (P 0.31, R 0.58); từng người F1 0.00 (0/0)
+[11:38:54]   RQ2 M1+H: F1 0.54 (P 0.42, R 0.77); từng người F1 0.00 (0/0)
+[11:38:54]   RQ2 M2+H: F1 0.55 (P 0.40, R 0.88); từng người F1 0.00 (0/0)
+[11:38:54]   RQ2 Oracle+H: F1 1.00 (P 1.00, R 1.00); từng người F1 0.00 (0/0)
+[11:39:05]   RQ3 Morning_Meds: không có thói quen chuẩn trong tập huấn luyện
+[11:39:05]   RQ3 Eve_Meds: không có thói quen chuẩn trong tập huấn luyện
+[11:39:05] milan: xong sau 315s
+[11:39:09] tulum2: 82 ngày huấn luyện, 55 ngày kiểm tra, 16 hoạt động, 6 vùng
+[11:39:13]   RQ1 B2: macro-F1 0.404, micro-F1 0.495 (4s)
+[11:44:48]   RQ1 M1: macro-F1 0.484, micro-F1 0.573 (335s)
+[11:45:53]     epoch 1: train loss 0.4868, val loss 0.4835
+[11:46:59]     epoch 2: train loss 0.3592, val loss 0.5233
+[11:48:05]     epoch 3: train loss 0.3340, val loss 0.5347
+[11:49:10]     epoch 4: train loss 0.3148, val loss 0.6065
+[11:50:34]     epoch 1: train loss 0.4664
+[11:50:49]   RQ1 M2: macro-F1 0.460, micro-F1 0.547 (361s)
+[11:50:57]   RQ2 B0: F1 0.33 (P 0.75, R 0.21); từng người F1 1.00 (1/1)
+[11:50:57]   RQ2 B1: F1 0.18 (P 0.50, R 0.11); từng người F1 0.00 (0/1)
+[11:50:57]   RQ2 B2+H: F1 0.54 (P 0.40, R 0.82); từng người F1 0.18 (1/1)
+[11:50:57]   RQ2 M1+H: F1 0.50 (P 0.40, R 0.68); từng người F1 0.20 (1/1)
+[11:50:57]   RQ2 M2+H: F1 0.51 (P 0.37, R 0.79); từng người F1 0.29 (1/1)
+[11:50:57]   RQ2 Oracle+H: F1 1.00 (P 1.00, R 1.00); từng người F1 1.00 (1/1)
+[11:51:42]   Lỗi lan truyền: xong
+[11:51:42] tulum2: xong sau 757s
+[11:51:47] aruba: 132 ngày huấn luyện, 88 ngày kiểm tra, 10 hoạt động, 5 vùng
+[11:51:51]   RQ1 B2: macro-F1 0.272, micro-F1 0.631 (4s)
+[11:57:17]   RQ1 M1: macro-F1 0.483, micro-F1 0.762 (325s)
+[11:58:58]     epoch 1: train loss 0.3318, val loss 0.2228
+[12:00:34]     epoch 2: train loss 0.2478, val loss 0.2171
+[12:02:07]     epoch 3: train loss 0.2239, val loss 0.2147
+[12:03:39]     epoch 4: train loss 0.2035, val loss 0.2169
+[12:05:16]     epoch 5: train loss 0.1859, val loss 0.2058
+[12:06:48]     epoch 6: train loss 0.1703, val loss 0.2163
+[12:08:20]     epoch 7: train loss 0.1555, val loss 0.2126
+[12:09:54]     epoch 8: train loss 0.1454, val loss 0.2307
+[12:12:09]     epoch 1: train loss 0.2992
+[12:14:20]     epoch 2: train loss 0.2259
+[12:16:43]     epoch 3: train loss 0.2029
+[12:18:38]     epoch 4: train loss 0.1833
+[12:20:29]     epoch 5: train loss 0.1680
+[12:20:49]   RQ1 M2: macro-F1 0.459, micro-F1 0.756 (1412s)
+[12:20:57]   RQ2 B0: F1 0.29 (P 0.67, R 0.18); từng người F1 0.00 (0/0)
+[12:20:57]   RQ2 B1: F1 0.27 (P 0.50, R 0.18); từng người F1 0.00 (0/0)
+[12:20:57]   RQ2 B2+H: F1 0.62 (P 0.48, R 0.91); từng người F1 0.00 (0/0)
+[12:20:57]   RQ2 M1+H: F1 0.59 (P 0.42, R 1.00); từng người F1 0.00 (0/0)
+[12:20:57]   RQ2 M2+H: F1 0.50 (P 0.33, R 1.00); từng người F1 0.00 (0/0)
+[12:20:57]   RQ2 Oracle+H: F1 1.00 (P 1.00, R 1.00); từng người F1 0.00 (0/0)
+[12:21:05] aruba: xong sau 1763s
+[14:31:34] cairo lần chia 0: 22/12 ngày, 3 thói quen đáp án; B0 0.29, B1 0.44, B2+H 0.38, M1+H 0.38, M2+H 0.27

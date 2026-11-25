@@ -1,0 +1,319 @@
+\chapter{Phương pháp}
+\label{chap:method}
+
+Chương này phát biểu hình thức bài toán (mục~\ref{sec:m-problem}), định nghĩa thói quen và thuật
+toán tìm thói quen (mục~\ref{sec:m-habit}), rồi trình bày lần lượt các khối của quy trình
+(Hình~\ref{fig:pipeline}): tiền xử lý, cấu trúc nhà rút ra từ dữ liệu, nhận dạng (người, hoạt động),
+các baseline, cách đánh giá thói quen, phân tích lỗi lan truyền và phát hiện bỏ thuốc.
+
+\section{Phát biểu bài toán}
+\label{sec:m-problem}
+
+\textbf{Dữ liệu cảm biến.} Một nhà có tập cảm biến $\mathcal S$. Nhật ký là chuỗi sự kiện
+$E = (e_1, e_2, \dots)$ sắp theo thời gian, $e_i = (t_i, s_i, v_i)$ với thời điểm $t_i$, cảm biến
+$s_i \in \mathcal S$ và giá trị $v_i$. Không có thông tin ai gây ra $e_i$.
+
+\textbf{Người và hoạt động.} Nhà có tập người $\mathcal P$ (ở đây $\{R1, R2\}$). Tập hoạt động
+$\mathcal A$ gồm các nhãn của bộ dữ liệu; mỗi hoạt động $a$ gắn với một người
+$\rho(a) \in \mathcal P \cup \{H\}$, trong đó $H$ nghĩa là ``chung của hộ'' (nhãn không ghi người,
+ví dụ \texttt{Breakfast}). Quy ước của CASAS: nhãn có tiền tố \texttt{R1\_}/\texttt{R2\_} gắn với
+người đó.
+
+\textbf{Lần thực hiện.} Một lần thực hiện là bộ $o = (a, t^{s}, t^{e})$: hoạt động $a$ diễn ra
+trong $[t^s, t^e]$. Nhãn thật cho tập lần thực hiện $O^\star$; một bộ nhận dạng sinh ra tập dự đoán
+$\hat O$.
+
+\textbf{Ngày quan sát.} $\Dd$ là tập ngày có dữ liệu. Với loại ngày
+$\tau \in \{\text{tất cả}, \text{ngày thường}, \text{cuối tuần}\}$, $\Dd_\tau \subseteq \Dd$ là các
+ngày thuộc loại đó.
+
+\textbf{Bài toán.} Cho $E$ trên các ngày kiểm tra (không có nhãn) và nhãn $O^\star$ trên các ngày huấn
+luyện, tìm tập thói quen $\hat\Hb$ của từng người trên các ngày kiểm tra sao cho $\hat\Hb$ khớp với tập
+thói quen đáp án $\Hb^\star$ --- thói quen thu được khi áp định nghĩa ở mục~\ref{sec:m-habit} lên
+nhãn thật của chính các ngày kiểm tra.
+
+\section{Định nghĩa thói quen}
+\label{sec:m-habit}
+
+\begin{definition}[Thói quen]
+\label{def:habit}
+Cho hoạt động $a$, loại ngày $\tau$, nửa bề rộng cửa sổ $w$ (mặc định 30 phút) và ngưỡng tần suất
+$\phi$ (mặc định $0{,}5$). Gọi $N(c)$ là số \emph{ngày phân biệt} trong $\Dd_\tau$ có ít nhất một lần
+thực hiện $a$ bắt đầu trong cửa sổ $[c-w, c+w]$ trên vòng 24 giờ. Một \textbf{thói quen} là một tâm
+$c$ sao cho
+\begin{enumerate}
+  \item $N(c) \ge \phi\,|\Dd_\tau|$ (lặp lại ở ít nhất một nửa số ngày);
+  \item $c$ là điểm đạt $N$ lớn nhất trong đoạn liên tục các tâm thỏa (1);
+  \item hai thói quen của cùng hoạt động có tâm cách nhau ít nhất $2w$ (cửa sổ không chồng lấn).
+\end{enumerate}
+Thói quen được mô tả bằng: người $\rho(a)$; hoạt động $a$; giờ điển hình (trung bình vòng tròn các
+lần thực hiện trong cửa sổ, mỗi ngày lấy lần gần tâm nhất); khung giờ chứa 80\% số lần; thời lượng
+trung vị; số ngày; tần suất $N(c)/|\Dd_\tau|$ và loại ngày $\tau$.
+\end{definition}
+
+Định nghĩa giữ đúng tinh thần đề tài thực tập (``lệch không quá khoảng 30 phút'', ``ít nhất 50\%
+số ngày'') nhưng thêm chiều \emph{người} và \emph{hoạt động}, và có ba lựa chọn thiết kế quan trọng:
+
+\begin{itemize}
+  \item \textbf{Đếm theo ngày, không theo lần.} Một hoạt động lặp năm lần trong một buổi sáng chỉ được
+  tính một ngày. Nhờ đó các hoạt động diễn ra nhiều lần trong ngày (vệ sinh, xem TV) không làm phồng
+  tần suất.
+  \item \textbf{Cửa sổ có bề rộng cố định.} Khác với DBSCAN, các lần thực hiện không thể ``nối
+  chuỗi'' qua nhau: khung giờ của một thói quen không thể rộng hơn $2w$. Mục~\ref{sec:exp-ablation}
+  cho thấy DBSCAN và HDBSCAN lệch khỏi định nghĩa này đáng kể ngay cả khi dùng nhãn thật.
+  \item \textbf{Loại ngày.} Thói quen được tìm trên cả ba loại ngày. Thói quen chỉ thấy ở ngày thường
+  hoặc cuối tuần được giữ khi không có thói quen ``tất cả'' nào trong vòng 60 phút và có ít nhất 4
+  ngày (tránh trường hợp 3/6 ngày cuối tuần đã đạt 50\%).
+\end{itemize}
+
+Thuật toán~\ref{alg:scan} hiện thực định nghĩa bằng cách quét tâm $c$ trên lưới 5 phút.
+
+\begin{algorithm}[htbp]
+\caption{Tìm thói quen của một hoạt động trên một loại ngày (quét cửa sổ)}
+\label{alg:scan}
+\KwIn{giờ bắt đầu $h_1..h_n$ và ngày $d_1..d_n$ của các lần thực hiện hoạt động $a$;
+số ngày quan sát $D$; nửa cửa sổ $w$; ngưỡng $\phi$}
+\KwOut{danh sách thói quen của $a$}
+$G \leftarrow \{0, 5, 10, \dots, 1435\}$ phút \tcp*{lưới tâm}
+\ForEach{$c \in G$}{
+  $N(c) \leftarrow \big|\{ d_j : |\delta(h_j, c)| \le w \}\big|$ \tcp*{số ngày phân biệt}
+}
+$Q \leftarrow \{ c \in G : N(c) \ge \phi D\}$\;
+Tách $Q$ thành các đoạn liên tục trên vòng tròn; mỗi đoạn cho ứng viên $(c^\ast, N(c^\ast))$ với
+$c^\ast$ là điểm giữa vùng đạt $N$ lớn nhất\;
+Duyệt ứng viên theo $N$ giảm dần, nhận $c^\ast$ nếu cách mọi tâm đã nhận ít nhất $2w$\;
+\ForEach{tâm được nhận $c$}{
+  Mỗi ngày lấy lần thực hiện gần $c$ nhất trong $[c-w,c+w]$\;
+  Tính giờ điển hình, khung 80\%, thời lượng trung vị, tần suất\;
+}
+\end{algorithm}
+
+Độ phức tạp là $O(|G| \cdot n)$ với $|G| = 288$, đủ nhanh cho mọi nhà (dưới một giây).
+
+\section{Tổng quan quy trình}
+\label{sec:m-overview}
+
+Hình~\ref{fig:pipeline} tóm tắt quy trình. Hàng trên là hướng tiếp cận đề xuất: nhật ký cảm biến được
+tiền xử lý, một bộ nhận dạng gán nhãn (người, hoạt động) cho từng sự kiện, các sự kiện được giải mã thành
+lần thực hiện, rồi Thuật toán~\ref{alg:scan} rút ra thói quen của từng người. Hàng dưới là các khối dùng
+chung và các baseline: cấu trúc nhà rút ra từ dữ liệu (dùng cho cả bộ nhận dạng lẫn baseline), các baseline
+không dùng nhãn B0/B1, khâu đánh giá với thói quen đáp án và ứng dụng phát hiện ngày bỏ thuốc. Nhãn thật chỉ
+được dùng ở hai chỗ: huấn luyện bộ nhận dạng (ngày huấn luyện) và tạo thói quen đáp án (ngày kiểm tra).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=3pt, align=center, font=\footnotesize, minimum height=1.25cm,
+              text width=2.35cm, inner sep=3pt, fill=#1},
+  box/.default=white,
+  arr/.style={-{Stealth[length=2mm]}, thick},
+  darr/.style={-{Stealth[length=2mm]}, thick, dashed}]
+% Hàng trên: hướng tiếp cận đề xuất
+\node[box=gray!10]   (raw)  at (0,0)    {Nhật ký cảm biến\\(luồng trộn\\hai người)};
+\node[box=gray!10]   (pre)  at (3.05,0) {Tiền xử lý\\(mục~\ref{sec:m-pre})};
+\node[box=blue!10]   (rec)  at (6.1,0)  {Nhận dạng\\(người, hoạt động)\\B2 / M1 / M2};
+\node[box=blue!10]   (dec)  at (9.15,0) {Giải mã thành\\lần thực hiện\\(mục~\ref{sec:m-rec})};
+\node[box=orange!15] (hab)  at (12.2,0) {Khai phá thói quen\\(Thuật toán~\ref{alg:scan})};
+% Hàng dưới: khối dùng chung, baseline, đánh giá
+\node[box=gray!10]   (topo) at (3.05,-2.3) {Cấu trúc nhà:\\đồ thị kề, vùng\\(mục~\ref{sec:m-topo})};
+\node[box=gray!10]   (base) at (6.1,-2.3)  {Baseline B0 / B1\\phiên theo vùng\\(mục~\ref{sec:m-base})};
+\node[box=green!12]  (eval) at (9.15,-2.3) {Đánh giá với\\thói quen đáp án\\(mục~\ref{sec:m-eval})};
+\node[box=green!12]  (rq3)  at (12.2,-2.3) {Phát hiện\\ngày bỏ thuốc\\(mục~\ref{sec:m-rq3})};
+\draw[arr] (raw) -- (pre);
+\draw[arr] (pre) -- (rec);
+\draw[arr] (rec) -- (dec);
+\draw[arr] (dec) -- (hab);
+\draw[arr] (pre) -- (topo);
+\draw[arr] (topo) -- (rec);
+\draw[darr] (topo) -- (base);
+\draw[darr] (base) -- (eval);
+\draw[arr] (hab) -- (eval);
+\draw[arr] (hab) -- (rq3);
+\end{tikzpicture}
+\caption{Quy trình của khóa luận. Hàng trên: hướng tiếp cận đề xuất; nét đứt: nhánh baseline không dùng
+nhãn. Nhãn thật chỉ dùng để huấn luyện bộ nhận dạng (ngày huấn luyện) và tạo thói quen đáp án (ngày kiểm
+tra).}
+\label{fig:pipeline}
+\end{figure}
+
+\section{Tiền xử lý}
+\label{sec:m-pre}
+
+\begin{enumerate}
+  \item \textbf{Đọc và sắp xếp.} Một số sự kiện trong CASAS bị ghi lệch thứ tự tối đa 0,1 giây (ghi
+  từ nhiều cảm biến cùng lúc); dữ liệu được sắp lại theo thời gian.
+  \item \textbf{Ghép nhãn.} Các mốc \texttt{begin}/\texttt{end} cùng tên được ghép thành lần thực
+  hiện; một dòng lỗi trong Tulum2 chỉ có chữ \texttt{begin} mà không có tên hoạt động bị bỏ qua.
+  \item \textbf{Lọc ngày.} Bỏ ngày có số sự kiện dưới 20\% trung vị số sự kiện mỗi ngày (ngày hỏng
+  thiết bị hoặc vắng nhà).
+  \item \textbf{Đơn vị quan sát.} Chỉ giữ sự kiện cảm biến chuyển động bật (\texttt{M* ON}): cảm biến
+  nhiệt độ đổi chậm và không chỉ ra vị trí người, còn sự kiện \texttt{OFF} chỉ lặp lại thông tin.
+  \item \textbf{Chia dữ liệu.} 60\% số ngày đầu để huấn luyện, 40\% số ngày sau để kiểm tra; trong
+  tập huấn luyện, 25\% số ngày cuối làm tập kiểm định để chọn ngưỡng và số epoch. Không xáo trộn
+  ngẫu nhiên.
+  \item \textbf{Tập hoạt động mô hình hóa.} Các hoạt động có ít nhất 5 lần thực hiện trong tập huấn luyện.
+\end{enumerate}
+
+\section{Cấu trúc nhà rút ra từ dữ liệu}
+\label{sec:m-topo}
+
+Bộ dữ liệu không ghi cảm biến nằm ở phòng nào, và sơ đồ mặt bằng chỉ có dạng ảnh, thậm chí thiếu
+tầng hai của Tulum. Vì vậy khóa luận rút cấu trúc nhà từ chính dữ liệu huấn luyện:
+
+\textbf{Đồ thị kề.} Đếm $T_{ij}$ là số lần sự kiện tại $s_i$ được theo sau trong vòng 5 giây bởi sự
+kiện tại $s_j \neq s_i$, rồi đối xứng hóa. Hai cảm biến \emph{kề} nhau nếu, theo ít nhất một chiều,
+cặp đó chiếm từ 8\% số lần rời khỏi cảm biến. Nếu đồ thị bị tách rời, nối các thành phần bằng cạnh
+mạnh nhất. Khoảng cách $\mathrm{hop}(s_i, s_j)$ là số bước ngắn nhất trên đồ thị.
+
+Ngưỡng 8\% và cửa sổ 5 giây được chọn để loại \emph{chuyển tiếp giả}: khi hai người cùng hoạt động,
+hai sự kiện liên tiếp của hai người ở hai nơi xa nhau tạo ra cặp ``chuyển tiếp'' không có thật. Với
+ngưỡng 2\% và cửa sổ 10 giây, cảm biến bếp M021 của Cairo bị coi là kề cảm biến phòng ngủ tầng trên
+M005; với lựa chọn cuối cùng hai cảm biến này cách nhau 5 bước, phù hợp sơ đồ thật.
+
+\textbf{Vùng.} Phân cụm phổ~\cite{vonluxburg2007spectral} trên ma trận tỉ lệ chuyển tiếp đối xứng,
+số vùng chọn theo khoảng cách trị riêng trong khoảng 3--10. Vùng đóng vai trò ``phòng'' của phương
+pháp thực tập. Trên Cairo, phân vùng tự động khớp với phân vùng đọc từ sơ đồ chính
+thức~\cite{casas2025floorplans} ở mức ARI được báo cáo trong Chương~\ref{chap:exp}.
+
+\section{Nhận dạng (người, hoạt động)}
+\label{sec:m-rec}
+
+\subsection{Bài toán đa nhãn theo sự kiện}
+
+Với mỗi sự kiện $e_i$, nhãn là vector $y_i \in \{0,1\}^{|\mathcal A|}$ với $y_{ik} = 1$ nếu $t_i$
+nằm trong một lần thực hiện hoạt động $a_k$. Vì tên hoạt động mang tiền tố người, ``đúng người'' được
+mã hóa sẵn trong nhãn; vì hai người có thể làm hai việc cùng lúc, một sự kiện có thể mang nhiều nhãn.
+Mọi bộ nhận dạng chỉ nhìn \emph{quá khứ}: cửa sổ kết thúc tại sự kiện hiện tại, như khi triển khai thật.
+
+\subsection{Ba bộ nhận dạng}
+
+\textbf{B2 --- tra bảng.} Ước lượng $P(a_k \mid \text{vùng của } s_i, \text{khung 30 phút của } t_i)$
+bằng tần suất trên dữ liệu huấn luyện. Đây là baseline không học đặc trưng: nó chỉ biết ``ở đâu, lúc
+nào'' --- đúng thông tin mà phương pháp thực tập dùng.
+
+\textbf{M1 --- Random Forest.} Với cửa sổ $W = 20$ sự kiện kết thúc tại $e_i$, đặc trưng gồm:
+tỉ lệ số lần mỗi cảm biến xuất hiện trong cửa sổ; cảm biến hiện tại (one-hot); vùng hiện tại; $\sin$ và
+$\cos$ của giờ; cờ cuối tuần; độ dài cửa sổ (log giây); khoảng cách tới sự kiện trước (log giây); số
+cảm biến phân biệt; và \textbf{tỉ lệ ``nhảy xa''} --- số cặp sự kiện liên tiếp cách nhau dưới 10 giây
+nhưng ở hai cảm biến cách $\ge 3$ bước trên đồ thị kề. Đặc trưng cuối cùng là dấu hiệu trực tiếp cho
+thấy có hơn một người đang hoạt động. Mô hình là rừng 150 cây~\cite{breiman2001rf}, mỗi lá ít nhất 3
+mẫu, trọng số lớp cân bằng theo từng mẫu bootstrap, nhiều đầu ra.
+
+\textbf{M2 --- Bi-GRU.} Chuỗi $W = 30$ sự kiện gần nhất; mỗi bước gồm vector nhúng 16 chiều của cảm
+biến và ba đặc trưng thời gian ($\sin$, $\cos$ của giờ, $\log(1+\Delta t)/5$). Một lớp GRU hai chiều
+64 đơn vị~\cite{cho2014gru,schuster1997brnn}, ghép trạng thái cuối hai chiều, dropout 0,2, tầng tuyến
+tính và hàm sigmoid cho từng hoạt động. Hàm mất mát là entropy chéo nhị phân có trọng số lớp dương
+$\min(50, \max(1, (1-p_k)/p_k))$ với $p_k$ là tỉ lệ dương của hoạt động $k$. Tối ưu Adam, tốc độ học
+$10^{-3}$, lô 512, tối đa 15 epoch, dừng sớm sau 3 epoch không cải thiện mất mát trên tập kiểm định.
+Cấu hình được chọn \emph{theo mất mát trên tập kiểm định của Cairo} trong ba cấu hình thử (chi tiết
+ở Phụ lục~\ref{app:gru}); sau đó mô hình được huấn luyện lại trên toàn bộ ngày huấn luyện với số epoch
+tốt nhất tìm được.
+
+\subsection{Ngưỡng và giải mã}
+
+Xác suất dự đoán được làm trơn bằng trung bình trượt nhân quả trên 5 sự kiện. Với mỗi hoạt động, ngưỡng
+quyết định được chọn trong lưới $\{0{,}10; 0{,}15; \dots; 0{,}90\}$ để F1 trên tập kiểm định cao nhất.
+Mô hình cuối cùng (B2, M1) được huấn luyện lại trên toàn bộ ngày huấn luyện và dùng ngưỡng đã chọn.
+
+Dự đoán nhị phân theo sự kiện được \emph{giải mã} thành lần thực hiện: các sự kiện dương liên tiếp của
+cùng hoạt động, nối khi cách nhau không quá 10 phút, bỏ đoạn có dưới 2 sự kiện. Thời điểm bắt đầu của
+lần thực hiện là thời điểm sự kiện đầu tiên. Thói quen dự đoán $\hat\Hb$ thu được bằng cách chạy
+Thuật toán~\ref{alg:scan} trên các lần thực hiện đã giải mã.
+
+\section{Các baseline không dùng nhãn}
+\label{sec:m-base}
+
+\textbf{B0 --- phương pháp của đề tài thực tập.} Gom sự kiện thành \emph{phiên}: chuỗi sự kiện liên
+tiếp ở cùng một vùng, tách khi đổi vùng hoặc im lặng quá 30 phút; bỏ phiên ngắn hơn 1 phút. Mỗi phiên
+là một điểm $(R\cos\theta, R\sin\theta, 0{,}5\log(1+d))$ với $R = 24/(2\pi)$ và $d$ là thời lượng
+(phút); DBSCAN với $\varepsilon = 0{,}5$ và \texttt{min\_samples} $= \max(5, \lceil 0{,}2 D\rceil)$
+chạy riêng từng vùng; cụm lặp lại ở ít nhất 50\% số ngày là thói quen.
+
+\textbf{B1 --- B0 cộng tách luồng theo vị trí.} Lấy ý tưởng của Chen~\cite{chen2021fcmcpd}: hai sự
+kiện liên tiếp ở hai nơi xa nhau khó do cùng một người gây ra. Thuật toán~\ref{alg:track} gán mỗi sự
+kiện vào một \emph{vệt}; phiên được gom trong từng vệt rồi xử lý như B0.
+
+\begin{algorithm}[htbp]
+\caption{Tách luồng sự kiện thành vệt theo vị trí (B1)}
+\label{alg:track}
+\KwIn{sự kiện $(t_i, s_i)$ theo thời gian; khoảng cách hop; số người $K = 2$; ngưỡng gần $\eta = 2$ bước;
+thời gian chờ $\Delta = 15$ phút}
+\KwOut{mã vệt của từng sự kiện}
+$\mathcal T \leftarrow \emptyset$ \tcp*{mỗi vệt: (mã, cảm biến cuối, thời điểm cuối)}
+\ForEach{sự kiện $(t_i, s_i)$}{
+  $\mathcal T_a \leftarrow$ các vệt có thời điểm cuối trong vòng $\Delta$ trước $t_i$\;
+  $k^\ast \leftarrow \arg\min_{k \in \mathcal T_a} \mathrm{hop}(\text{cảm biến cuối}_k, s_i)$ (hòa: vệt gần đây hơn)\;
+  \eIf{$\mathcal T_a = \emptyset$ \textbf{hoặc} ($\mathrm{hop} > \eta$ \textbf{và} $|\mathcal T_a| < K$)}{
+    mở vệt mới, gán $e_i$ vào vệt đó\;
+  }{
+    gán $e_i$ vào $k^\ast$\;
+  }
+  cập nhật cảm biến cuối và thời điểm cuối của vệt được gán\;
+}
+\end{algorithm}
+
+\textbf{Gán nhãn cho cụm (chỉ để đánh giá).} B0 và B1 không biết tên hoạt động. Để so với đáp án, mỗi
+phiên được gán nhãn của lần thực hiện thật có thời gian chồng lấn lớn nhất; cụm được gán nhãn đa số
+trong các phiên có nhãn, và bị coi là ``không nhãn'' nếu dưới 20\% số phiên của nó trùng nhãn nào.
+Cách gán này \emph{dùng nhãn của tập kiểm tra} nên có lợi cho baseline; so sánh vì thế thận trọng đối
+với các mô hình đề xuất.
+
+\section{Đánh giá thói quen}
+\label{sec:m-eval}
+
+\textbf{So khớp.} Thói quen dự đoán và thói quen đáp án \emph{cùng hoạt động} được ghép một--một bằng
+thuật toán Hungary~\cite{kuhn1955hungarian} trên chênh lệch giờ điển hình (phút); chỉ nhận cặp lệch
+không quá 60 phút. Loại ngày không bắt buộc trùng: thói quen ``uống thuốc 06:57 mọi ngày'' vẫn đúng về
+bản chất với đáp án ``uống thuốc 07:08 ngày thường'', vì ngưỡng 50\% đặt trên hai tập ngày khác nhau.
+
+\textbf{Chỉ số.} Với $n_m$ cặp khớp, $|\hat\Hb|$ thói quen dự đoán và $|\Hb^\star|$ thói quen đáp án:
+\begin{equation}
+  P = \frac{n_m}{|\hat\Hb|}, \qquad R = \frac{n_m}{|\Hb^\star|}, \qquad F1 = \frac{2PR}{P+R}.
+\end{equation}
+Kèm theo là sai số giờ (trung bình chênh lệch giờ điển hình của các cặp khớp, phút) và sai số tần suất.
+Mọi chỉ số được tính hai lần: trên toàn bộ thói quen, và chỉ trên thói quen \textbf{gắn với từng người}
+($\rho(a) \in \{R1, R2\}$).
+
+\textbf{Oracle.} Chạy Thuật toán~\ref{alg:scan} trên nhãn thật của ngày kiểm tra cho đúng $\Hb^\star$,
+nên F1 của Oracle bằng 1 theo cấu trúc. Điều này có chủ đích: với khâu khai phá cố định là định nghĩa,
+\emph{mọi} sai lệch giữa $\hat\Hb$ và $\Hb^\star$ đến từ khâu nhận dạng --- điều kiện cần cho phân
+tích lỗi lan truyền.
+
+\section{Phân tích lỗi lan truyền}
+\label{sec:m-prop}
+
+Thay vì chỉ quan sát vài mô hình, khóa luận \emph{làm nhiễu nhãn thật có kiểm soát} trên ngày kiểm tra,
+khai phá thói quen trên nhãn đã nhiễu và so với đáp án. Bốn loại lỗi mô phỏng những gì một bộ nhận dạng
+có thể làm sai:
+
+\begin{itemize}
+  \item \textbf{Bỏ sót}: xóa ngẫu nhiên tỉ lệ $p \in \{0; 0{,}1; \dots; 0{,}5\}$ lần thực hiện.
+  \item \textbf{Lệch giờ}: dời mỗi lần thực hiện một lượng theo phân phối chuẩn độ lệch
+  $\sigma \in \{0, 5, 10, 20, 30, 45\}$ phút.
+  \item \textbf{Chèn giả}: thêm số lần thực hiện giả bằng $p \in \{0; 0{,}1; 0{,}25; 0{,}5; 1; 2\}$ lần
+  số thật, ở ngày và giờ ngẫu nhiên.
+  \item \textbf{Tráo người}: với xác suất $p \in \{0; 0{,}1; \dots; 0{,}5\}$, đổi \texttt{R1} $\leftrightarrow$
+  \texttt{R2} trên các hoạt động gắn người --- lỗi đặc trưng của nhà nhiều người; F1 tính trên thói quen
+  gắn người.
+\end{itemize}
+Mỗi mức lặp lại với 5 hạt giống ngẫu nhiên.
+
+\section{Phát hiện bỏ thuốc}
+\label{sec:m-rq3}
+
+\begin{enumerate}
+  \item \textbf{Thói quen chuẩn} của hoạt động đích (Cairo: \texttt{R2\_Take\_Medicine}; Milan:
+  \texttt{Morning\_Meds}, \texttt{Eve\_Meds}) học từ nhãn của các ngày huấn luyện bằng chính
+  Định nghĩa~\ref{def:habit}. \emph{Cửa sổ phát hiện} là khung 80\% của thói quen nới thêm 30 phút mỗi phía.
+  \item \textbf{Cài bất thường}: chọn ngẫu nhiên 20\% số ngày kiểm tra có uống thuốc, xóa mọi sự kiện cảm
+  biến nằm trong các lần uống thuốc của ngày đó --- mô phỏng ``hôm đó không ai tới chỗ để thuốc''. Các sự
+  kiện khác, kể cả bữa sáng ở cùng bếp, được giữ nguyên.
+  \item \textbf{Phát hiện}: chạy bộ nhận dạng (đã huấn luyện, không học lại) trên luồng đã sửa; nếu
+  trong cửa sổ không nhận ra lần thực hiện hoạt động đích nào thì báo động.
+  \item \textbf{Baseline theo vùng} (B0-vùng): báo động nếu vùng chứa cảm biến hay kích hoạt nhất khi uống
+  thuốc không có sự kiện nào trong cửa sổ.
+  \item \textbf{Đáp án} của một ngày là ``bỏ thuốc'' nếu sau khi cài không còn lần uống thuốc thật nào bắt
+  đầu trong cửa sổ, gồm cả ngày bị cài và ngày tự nhiên không uống.
+\end{enumerate}
+Chỉ số là precision, recall, F1 theo ngày, số báo động nhầm trên mỗi ngày và độ trễ báo động (từ giờ điển
+hình tới cuối cửa sổ). Kết quả lấy trung bình 5 lần cài với hạt giống khác nhau.

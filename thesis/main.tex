@@ -1,0 +1,129 @@
+% =====================================================================
+%  KHÓA LUẬN TỐT NGHIỆP — Trường Đại học Công nghệ, ĐHQGHN
+%  Học thói quen sinh hoạt của từng cư dân trong nhà thông minh nhiều người
+%  Biên dịch trên Overleaf: Compiler = pdfLaTeX, Main document = main.tex
+% =====================================================================
+\documentclass[12pt,a4paper,oneside]{report}
+
+% ---------- Tiếng Việt ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[english,vietnamese]{babel}  % ngôn ngữ chính: tiếng Việt (đứng cuối)
+\usepackage{lmodern}
+
+% ---------- Trang, khoảng cách ----------
+\usepackage[left=3cm,right=2cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1cm}
+\setlength{\parskip}{4pt}
+\usepackage{indentfirst}
+\raggedbottom
+
+% ---------- Toán, bảng, hình ----------
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{makecell}
+\renewcommand{\cellalign}{cc}
+\renewcommand{\theadalign}{cc}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage[font=small,labelfont=bf,labelsep=period]{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\SetAlgorithmName{Thuật toán}{thuật toán}{Danh sách thuật toán}
+\SetKwInput{KwIn}{Đầu vào}
+\SetKwInput{KwOut}{Đầu ra}
+\usepackage{enumitem}
+\setlist{itemsep=2pt,topsep=4pt}
+
+% ---------- Chương, mục (theo mẫu khóa luận UET) ----------
+\usepackage{titlesec}
+% Chương có số: dòng "Chương 1", dòng dưới là tên chương viết hoa.
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}{\huge\chaptertitlename\ \thechapter}{14pt}{\Huge\MakeUppercase}
+\titlespacing*{\chapter}{0pt}{0pt}{28pt}
+% Chương không số (Lời cảm ơn, Mục lục, Tài liệu tham khảo...): viết hoa, căn giữa.
+\titleformat{name=\chapter,numberless}[block]
+  {\normalfont\bfseries\Huge\filcenter}{}{0pt}{\MakeUppercase}
+\titlespacing*{name=\chapter,numberless}{0pt}{0pt}{24pt}
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection.}{0.5em}{}
+
+\usepackage{tocloft}
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftchappagefont}{\bfseries}
+\renewcommand{\cftchappresnum}{Chương\ }
+\setlength{\cftchapnumwidth}{5.5em}
+
+% ---------- Liên kết ----------
+\usepackage[hidelinks,unicode]{hyperref}
+\usepackage{url}
+
+% ---------- Định nghĩa ----------
+\theoremstyle{definition}
+\newtheorem{definition}{Định nghĩa}[chapter]
+
+% ---------- Thông tin chung ----------
+\newcommand{\thesistitle}{HỌC THÓI QUEN SINH HOẠT CỦA TỪNG CƯ DÂN\\ TRONG NHÀ THÔNG MINH NHIỀU NGƯỜI\\ TỪ DỮ LIỆU CẢM BIẾN MÔI TRƯỜNG}
+\newcommand{\thesistitleen}{LEARNING PER-RESIDENT DAILY HABITS\\ FROM AMBIENT SENSORS\\ IN MULTI-RESIDENT SMART HOMES}
+\newcommand{\studentname}{Nguyễn Văn Biển}
+\newcommand{\studentnameen}{Nguyen Van Bien}
+\newcommand{\studentid}{23021477}
+\newcommand{\studentclass}{QH-2023-I/CQ-I-CS3}
+\newcommand{\supervisor}{TS. Vũ Thị Hồng Nhạn}
+\newcommand{\supervisoren}{Dr. Vu Thi Hong Nhan}
+\newcommand{\thesisyear}{2027}
+
+% Ký hiệu dùng xuyên suốt
+\newcommand{\Hb}{\mathcal{H}}
+\newcommand{\Dd}{\mathcal{D}}
+
+\begin{document}
+
+% ---------------- Bìa ----------------
+\pagenumbering{gobble}
+\input{frontmatter/cover}
+
+% ---------------- Phần đầu ----------------
+\pagenumbering{roman}
+\setcounter{page}{1}
+\input{frontmatter/abstract}
+\input{frontmatter/acknowledgements}
+\input{frontmatter/declaration}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\input{frontmatter/abbreviations}
+
+% ---------------- Nội dung ----------------
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\input{chapters/ch1_introduction}
+\input{chapters/ch2_background}
+\input{chapters/ch3_method}
+\input{chapters/ch4_experiments}
+\input{chapters/ch5_conclusion}
+
+% ---------------- Tài liệu tham khảo ----------------
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Tài liệu tham khảo}
+\renewcommand{\bibname}{Tài liệu tham khảo}
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+% ---------------- Phụ lục ----------------
+\appendix
+\input{chapters/appendix}
+
+\end{document}

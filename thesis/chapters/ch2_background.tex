@@ -1,0 +1,191 @@
+\chapter{Tổng quan và kiến thức nền}
+\label{chap:background}
+
+Chương này trình bày bối cảnh kỹ thuật của khóa luận: nhà thông minh dùng cảm biến môi trường
+(mục~\ref{sec:bg-smarthome}), quy trình nhận dạng hoạt động (mục~\ref{sec:bg-har}), bài toán nhà
+nhiều người với trọng tâm là luận án của Chen~\cite{chen2021thesis} (mục~\ref{sec:bg-multi}),
+các hướng khai phá mẫu sinh hoạt và theo dõi thay đổi hành vi (mục~\ref{sec:bg-routine}), xu hướng
+dùng mô hình ngôn ngữ (mục~\ref{sec:bg-llm}), các kiến thức nền được dùng trong khóa luận
+(mục~\ref{sec:bg-tools}) và cuối cùng là khoảng trống mà khóa luận hướng tới
+(mục~\ref{sec:bg-gap}).
+
+\section{Nhà thông minh và cảm biến môi trường}
+\label{sec:bg-smarthome}
+
+Theo cách phân loại phổ biến, cảm biến dùng cho nhận dạng hoạt động gồm năm nhóm: camera, thiết bị
+đeo, điện thoại, âm thanh và cảm biến môi trường~\cite{chen2021thesis,bouchabou2021survey}. Camera
+cho thông tin giàu nhất nhưng đắt và xâm phạm riêng tư; thiết bị đeo rẻ hơn nhưng người cao tuổi
+thường ngại đeo hoặc quên đeo. \emph{Cảm biến môi trường} --- gắn cố định trong nhà --- được xem là
+hướng hợp lý cho chăm sóc tại nhà vì không xâm nhập, rẻ và dễ lắp đặt~\cite{chen2021thesis}.
+
+Dự án CASAS của Đại học Bang Washington~\cite{cook2013casas} là nguồn dữ liệu chuẩn của lĩnh vực.
+Mỗi nhà gắn vài chục cảm biến: cảm biến chuyển động (ký hiệu \texttt{M}, giá trị \texttt{ON/OFF}),
+cảm biến cửa (\texttt{D}, \texttt{OPEN/CLOSE}) và cảm biến nhiệt độ (\texttt{T}). Mỗi dòng dữ liệu
+là một \emph{sự kiện}: \texttt{2009-06-10 07:12:05 M021 ON}. Một số dòng kèm nhãn do người chú
+thích ghi, dạng \texttt{R2\_Take\_Medicine begin/end}, đánh dấu đầu và cuối một lần thực hiện hoạt
+động. Đặc điểm quan trọng: dữ liệu \emph{thưa} (cảm biến chỉ kích hoạt khi có chuyển động),
+\emph{không đều} theo thời gian và \emph{vô danh} --- không ghi ai đã kích hoạt cảm biến.
+
+\section{Nhận dạng hoạt động từ cảm biến môi trường}
+\label{sec:bg-har}
+
+Chen~\cite{chen2021thesis} tổng kết quy trình nhận dạng hoạt động dựa trên dữ liệu thành bốn bước:
+\emph{thu thập dữ liệu} $\rightarrow$ \emph{tiền xử lý và phân đoạn} $\rightarrow$ \emph{phân lớp}
+$\rightarrow$ \emph{suy luận và đánh giá}.
+
+\textbf{Phân đoạn.} Chuỗi sự kiện liên tục phải được cắt thành các đoạn để phân lớp. Ba cách cơ
+bản là cửa sổ trượt cố định theo thời gian, cửa sổ cố định theo số sự kiện và cửa sổ động dựa trên
+tương quan giữa cảm biến~\cite{chen2021thesis,krishnan2014streaming}. Krishnan và
+Cook~\cite{krishnan2014streaming} đề xuất gán nhãn cho \emph{từng sự kiện} dựa trên cửa sổ các sự
+kiện ngay trước nó --- cách làm phù hợp với dữ liệu dạng luồng và được khóa luận kế thừa.
+Phát hiện điểm thay đổi (CPD)~\cite{aminikhanghahi2017cpd} là một cách khác để tìm ranh giới hoạt
+động.
+
+\textbf{Phân lớp.} Các mô hình truyền thống gồm Naive Bayes, mô hình Markov ẩn, trường ngẫu nhiên
+có điều kiện, cây quyết định, SVM và rừng ngẫu nhiên~\cite{breiman2001rf}; các mô hình học sâu gồm
+CNN và nhất là các mạng hồi quy LSTM, GRU và biến thể hai chiều~\cite{cho2014gru,schuster1997brnn}.
+Thực nghiệm của Chen cho thấy mạng hồi quy thường vượt các mô hình khác trên dữ liệu chuỗi thời
+gian~\cite{chen2021thesis}.
+
+\textbf{Đánh giá.} Các chỉ số thường dùng là accuracy, precision, recall và F1. Một điểm cần lưu ý
+về phương pháp luận: nhiều công trình, kể cả~\cite{chen2021thesis}, dùng kiểm định chéo 10 lần mà
+không nói rõ có chia theo thời gian hay không. Với dữ liệu chuỗi thời gian, nếu chia ngẫu nhiên thì
+các cửa sổ liền kề --- gần như giống nhau --- rơi vào cả tập huấn luyện lẫn tập kiểm tra, làm kết
+quả cao hơn thực tế. Khóa luận chia dữ liệu \emph{theo ngày, theo thứ tự thời gian} để tránh rủi ro
+này.
+
+\section{Nhà nhiều người}
+\label{sec:bg-multi}
+
+\subsection{Thách thức}
+
+Khi có từ hai người trở lên, các sự kiện của họ trộn vào một luồng theo thứ tự thời
+gian~\cite{benmansour2015survey}. Bên cạnh hoạt động tuần tự, xen kẽ và đồng thời của một người,
+xuất hiện thêm hoạt động \emph{song song} (mỗi người làm một việc ở một nơi) và \emph{cộng tác}
+(cùng làm một việc)~\cite{chen2021thesis}. Hệ thống không chỉ phải biết ``đang có hoạt động gì'' mà
+còn phải biết ``ai đang làm''~\cite{singla2010multiresident}.
+
+\subsection{Luận án của Chen (2021)}
+
+Luận án tiến sĩ của Dong Chen~\cite{chen2021thesis} là tài liệu định hướng chính của khóa luận. Luận
+án giải ba bài toán con:
+\begin{enumerate}
+  \item \textbf{Phân đoạn} (Chương 3 của luận án, công bố trên IEEE Internet of Things
+  Journal~\cite{chen2021fcmcpd}): gom cảm biến theo \emph{vị trí} bằng Fuzzy C-means --- hai sự kiện
+  liên tiếp ở hai vùng khác nhau khó do cùng một người gây ra --- rồi dùng CPD để tìm điểm chuyển
+  hoạt động trong từng nhóm.
+  \item \textbf{Phân lớp} (Chương 4): mô hình TRANS-BiGRU kết hợp Transformer với Bi-GRU, so sánh với
+  khoảng 15 mô hình học máy và học sâu trên CASAS và ARAS~\cite{alemdar2013aras}.
+  \item \textbf{Học trực tuyến} (Chương 5): rừng ngẫu nhiên thích nghi kèm bộ phát hiện trôi khái
+  niệm (LED-ARF) cho dữ liệu đến liên tục.
+\end{enumerate}
+Chính luận án nêu ba hạn chế: dữ liệu chỉ có hai người và hoạt động đơn giản; hiệu năng còn khoảng
+cách để cải thiện; và các phương pháp \emph{chỉ nhận ra hoạt động hiện tại}, chưa dự đoán hay phát
+hiện bất thường. Khóa luận kế thừa \emph{khung} của luận án (tách người $\rightarrow$ nhận dạng) và
+\emph{ý tưởng} dùng vị trí để tách người, nhưng không tái hiện các mô hình của luận án; thay vào đó,
+khóa luận đi tiếp theo hướng luận án còn bỏ ngỏ: từ nhận dạng sang \emph{hành vi dài hạn}.
+
+\subsection{Gán sự kiện cho từng người}
+
+Bài toán ``sự kiện này do ai gây ra'' được gọi là \emph{liên kết dữ liệu} (data association) hay
+\emph{theo dõi nhiều cư dân}. Crandall và Cook~\cite{crandall2009coping} dùng luật dựa trên đồ thị
+kề của cảm biến; Wang và Cook~\cite{wang2021smrt} (sMRT) vector hóa cảm biến để theo dõi nhiều người
+mà không cần sơ đồ nhà. Gần đây, Chen, Cumin và cộng sự~\cite{chen2026mdp} mô hình hóa bài toán như
+một quá trình quyết định Markov, huấn luyện bằng học bắt chước với Transformer nhỏ hoặc mô hình ngôn
+ngữ lớn; công trình này cho thấy gán sai người làm sai các chỉ số sức khỏe phía sau, như thời lượng
+hoạt động. Các công trình trên đánh giá ở mức \emph{sự kiện} hoặc \emph{vệt}; chưa công trình nào
+đánh giá tác động lên \emph{thói quen}.
+
+\section{Khai phá mẫu sinh hoạt và thay đổi hành vi}
+\label{sec:bg-routine}
+
+Một hướng khác không hỏi ``hoạt động hiện tại là gì'' mà hỏi ``sinh hoạt thường ngày như thế nào''.
+Duckworth và cộng sự~\cite{duckworth2019unsupervised} cho robot di động tự học các lớp hoạt động
+không cần nhãn; bộ dữ liệu dài hạn của dự án STRANDS~\cite{coppola2016temporal} là dữ liệu thật của
+đề tài thực tập. DISCOVER~\cite{karpekov2025discover} học biểu diễn tự giám sát rồi phân cụm để tìm
+``mẫu sinh hoạt hằng ngày'', chỉ cần gán nhãn rất ít cụm --- nhưng chỉ kiểm chứng trên nhà một người.
+X-BCD~\cite{civitarese2026xbcd} phát hiện thay đổi hành vi theo thời gian và giải thích cho bác sĩ.
+
+Đề tài thực tập của tác giả thuộc hướng này: thói quen được định nghĩa là nhóm phiên cùng phòng, bắt
+đầu lệch nhau không quá khoảng 30 phút, lặp lại ở ít nhất 50\% số ngày, và được tìm bằng DBSCAN
+trên không gian giờ vòng tròn. Hạn chế được ghi nhận khi đó: một hoạt động kéo dài cả buổi (ngồi
+phòng khách) bị DBSCAN nối thành một khung giờ rất rộng, và dữ liệu thật chỉ có một người.
+
+\section{Xu hướng mô hình ngôn ngữ và mô hình nền}
+\label{sec:bg-llm}
+
+Từ 2024, nhiều công trình chuyển chuỗi cảm biến thành văn bản để dùng mô hình ngôn ngữ: ADL-LLM nhận
+dạng hoạt động không cần nhãn huấn luyện~\cite{civitarese2024adlllm}; TDOST mô tả mỗi lần cảm biến
+kích hoạt bằng câu chữ để chuyển mô hình sang nhà khác~\cite{thukral2024tdost}; một số công trình
+dùng biểu diễn ngôn ngữ thay vì sinh văn bản~\cite{dhekane2025prompt}; DomusFM là mô hình nền đầu
+tiên huấn luyện riêng cho dữ liệu nhà thông minh~\cite{fiori2026domusfm}. Bộ dữ liệu MuRAL~\cite{chen2025mural}
+(2--4 người, chú thích bằng ngôn ngữ tự nhiên) cho thấy các mô hình ngôn ngữ hiện tại vẫn gặp khó
+khi phải phân biệt ai kích hoạt cảm biến. Dự đoán hoạt động tiếp theo bằng mô hình ngôn ngữ cũng đã
+được thử nghiệm~\cite{doctorarastoo2026prediction}. Các hướng này nằm \emph{ngoài phạm vi} khóa luận
+và được nhắc lại trong phần hướng phát triển.
+
+\section{Kiến thức nền}
+\label{sec:bg-tools}
+
+\subsection{Thống kê vòng tròn}
+Giờ trong ngày là đại lượng tuần hoàn: 23:50 và 00:10 chỉ cách nhau 20 phút nhưng nếu biểu diễn bằng
+số thực (23,83 và 0,17) thì cách nhau gần một ngày. Cách xử lý chuẩn~\cite{fisher1993circular} là
+đặt giờ $h$ lên vòng tròn với góc $\theta = 2\pi h/24$. Trung bình vòng tròn của các giờ
+$h_1,\dots,h_n$ là
+\begin{equation}
+  \bar h = \frac{24}{2\pi}\,\operatorname{atan2}\Big(\tfrac1n\textstyle\sum_i \sin\theta_i,\;
+  \tfrac1n\sum_i \cos\theta_i\Big) \bmod 24,
+\end{equation}
+và chênh lệch có dấu giữa hai giờ là $\delta(a,b) = \big((a-b+12) \bmod 24\big) - 12 \in [-12, 12)$.
+
+\subsection{Phân cụm theo mật độ}
+DBSCAN~\cite{ester1996dbscan} gom các điểm có ít nhất \texttt{min\_samples} láng giềng trong bán
+kính $\varepsilon$ thành cụm, các điểm còn lại là nhiễu; không cần biết trước số cụm. Nhược điểm
+liên quan trực tiếp tới khóa luận: các điểm có thể ``nối chuỗi'' qua nhau, nên một hoạt động diễn
+ra rải rác cả ngày tạo thành một cụm kéo dài cả ngày. HDBSCAN~\cite{campello2013hdbscan} xây cây
+phân cấp mật độ và chọn cụm ổn định nhất, không cần $\varepsilon$ nhưng vì thế cũng không có khái
+niệm ``lệch không quá 30 phút''.
+
+\subsection{Rừng ngẫu nhiên và mạng hồi quy}
+Rừng ngẫu nhiên~\cite{breiman2001rf} kết hợp nhiều cây quyết định học trên các mẫu bootstrap và tập
+con đặc trưng ngẫu nhiên; ổn định, ít cần tinh chỉnh và hỗ trợ trực tiếp bài toán nhiều đầu ra. GRU
+\cite{cho2014gru} là mạng hồi quy có cổng cập nhật và cổng đặt lại; phiên bản hai chiều
+\cite{schuster1997brnn} đọc chuỗi theo cả hai chiều rồi ghép trạng thái ẩn.
+
+\subsection{Phân cụm phổ}
+Phân cụm phổ~\cite{vonluxburg2007spectral} dùng các vector riêng của ma trận Laplacian chuẩn hóa
+$L = I - D^{-1/2} A D^{-1/2}$ của đồ thị tương đồng $A$. Số cụm có thể chọn theo \emph{khoảng cách
+trị riêng}: $k$ là vị trí có bước nhảy lớn nhất giữa hai trị riêng liên tiếp nhỏ nhất.
+
+\subsection{Bài toán ghép cặp}
+Để so khớp một--một hai tập phần tử theo một ma trận chi phí, thuật toán Hungary~\cite{kuhn1955hungarian}
+tìm cách ghép có tổng chi phí nhỏ nhất trong thời gian đa thức.
+
+\section{Khoảng trống nghiên cứu và vị trí của khóa luận}
+\label{sec:bg-gap}
+
+Bảng~\ref{tab:gap} đặt khóa luận cạnh các công trình gần nhất.
+
+\begin{table}[htbp]
+\centering
+\caption{Vị trí của khóa luận so với các công trình liên quan}
+\label{tab:gap}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X ccc}
+\toprule
+Công trình & Nhà nhiều người & Đầu ra là thói quen & Đánh giá mức thói quen \\
+\midrule
+Chen 2021~\cite{chen2021thesis,chen2021fcmcpd} & \checkmark & -- & -- \\
+sMRT 2021~\cite{wang2021smrt}; MDP 2026~\cite{chen2026mdp} & \checkmark & -- & -- \\
+DISCOVER 2025~\cite{karpekov2025discover} & -- & \checkmark & một phần \\
+X-BCD 2026~\cite{civitarese2026xbcd} & -- & thay đổi hành vi & -- \\
+Đề tài thực tập & -- & \checkmark & \checkmark \\
+\textbf{Khóa luận này} & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Các công trình về nhà nhiều người dừng ở mức sự kiện hoặc hoạt động; các công trình về mẫu sinh hoạt
+chỉ làm với một người. Khóa luận đứng ở giao điểm: \emph{học thói quen của từng người khi luồng cảm
+biến bị trộn}, đánh giá trực tiếp ở mức thói quen, và đo xem lỗi ở khâu nhận dạng --- trong đó có
+lỗi nhầm người --- ảnh hưởng tới thói quen đến đâu.

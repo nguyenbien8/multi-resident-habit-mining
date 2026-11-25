@@ -1,0 +1,146 @@
+\chapter{Giới thiệu}
+\label{chap:intro}
+
+\section{Bối cảnh và động lực}
+
+Việt Nam đang già hóa dân số với tốc độ nhanh. Theo số liệu năm 2024 của Tổng cục Thống kê, cả
+nước có khoảng 14,2 triệu người cao tuổi, chiếm khoảng 14\% dân số, và dự kiến bước vào giai
+đoạn dân số già vào khoảng năm 2034--2036~\cite{vnexpress2024tuoigia}. Việc chăm sóc người cao
+tuổi hiện chủ yếu do người thân trong gia đình đảm nhận, trong khi dịch vụ chăm sóc cộng đồng
+còn hạn chế. Bối cảnh đó tạo ra nhu cầu về những công cụ giúp người thân theo dõi sinh hoạt
+hằng ngày của người cao tuổi từ xa, với chi phí thấp và không xâm phạm quyền riêng tư.
+
+Nhà thông minh dùng \textbf{cảm biến môi trường} --- cảm biến chuyển động hồng ngoại (PIR), cảm
+biến cửa, cảm biến nhiệt độ --- là một hướng đáp ứng nhu cầu đó: thiết bị rẻ, không cần camera,
+không bắt người dùng đeo thiết bị~\cite{cook2013casas,bouchabou2021survey}. Từ nhật ký sự kiện
+của các cảm biến, hệ thống có thể học được \textbf{thói quen} của người ở: thức dậy lúc mấy giờ,
+ăn sáng khi nào, có uống thuốc đều đặn không. Thói quen là nền tảng cho nhiều ứng dụng: nhắc nhở
+khi quên uống thuốc --- một vấn đề có thật khi tỉ lệ tuân thủ điều trị bệnh mạn tính trung bình
+chỉ khoảng 50\%~\cite{who2003adherence} ---, cảnh báo khi sinh hoạt thay đổi bất thường, hay tự
+động hóa thiết bị theo nhịp sống của từng người.
+
+Trong đợt thực tập trước đó, tác giả đã xây dựng một phương pháp không giám sát để tìm thói quen
+từ dữ liệu cảm biến: gom sự kiện thành \emph{phiên} (một lần ở liên tục trong một phòng), biểu
+diễn giờ trong ngày trên vòng tròn và phân cụm bằng DBSCAN~\cite{ester1996dbscan}. Phương pháp
+tìm lại đủ 12/12 thói quen cài sẵn trên dữ liệu mô phỏng và 5 thói quen trên dữ liệu thật của
+một người sống một mình. Tuy nhiên, phương pháp đó --- cũng như phần lớn nghiên cứu về khai phá
+mẫu sinh hoạt --- ngầm giả định \textbf{trong nhà chỉ có một người}.
+
+Giả định này không đúng với thực tế. Người cao tuổi thường sống cùng vợ hoặc chồng, hoặc cùng con
+cháu. Khi trong nhà có hai người, cảm biến môi trường \emph{không biết ai đã kích hoạt nó}: các
+sự kiện của hai người trộn vào một luồng duy nhất~\cite{benmansour2015survey,wang2021smrt}. Luận
+án tiến sĩ của Dong Chen~\cite{chen2021thesis} --- tài liệu định hướng chính của khóa luận ---
+đã chỉ ra rằng nhận dạng hoạt động trong nhà nhiều người khó hơn hẳn nhà một người, và đề xuất
+các kỹ thuật phân đoạn, phân lớp và học trực tuyến cho bài toán này. Nhưng luận án đó dừng ở việc
+nhận dạng \emph{hoạt động đang diễn ra}; chính tác giả nêu trong phần hạn chế rằng các phương
+pháp ``chỉ nhận ra hoạt động hiện tại'' và chưa hướng tới hành vi dài hạn.
+
+\section{Bài toán và ví dụ minh họa}
+\label{sec:intro-example}
+
+Xét bộ dữ liệu CASAS Cairo~\cite{casas2025zenodo}: một cặp vợ chồng (ký hiệu R1, R2) sống trong
+căn nhà ba tầng gắn 27 cảm biến chuyển động, được ghi nhận trong 57 ngày. Bảng~\ref{tab:cairo-morning}
+thống kê bốn hoạt động buổi sáng.
+
+\begin{table}[htbp]
+\centering
+\caption{Bốn hoạt động buổi sáng ở nhà Cairo (thống kê trên nhãn thật của toàn bộ dữ liệu)}
+\label{tab:cairo-morning}
+\begin{tabular}{llcl}
+\toprule
+Hoạt động & Người & Giờ trung vị & Cảm biến kích hoạt nhiều nhất \\
+\midrule
+Thức dậy & R1 & 06:44 & M005, M001 (tầng trên) \\
+Thức dậy & R2 & 07:04 & M005, M009 (tầng trên) \\
+\textbf{Uống thuốc} & \textbf{R2} & \textbf{07:20} & \textbf{M021, M024 (bếp)} \\
+Ăn sáng & chung & 07:29 & M024, M021 (bếp) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Thói quen uống thuốc của R2 và bữa sáng chung dùng đúng những cảm biến bếp giống nhau và chỉ cách
+nhau khoảng 10 phút. Một phương pháp chỉ nhìn ``phòng nào, mấy giờ'' như ở đợt thực tập không thể
+tách hai thói quen này; thực nghiệm ở Chương~\ref{chap:exp} cho thấy nó còn gộp mọi bữa ăn trong
+ngày của vùng bếp vào \emph{một} cụm duy nhất. Muốn biết ``R2 có uống thuốc lúc khoảng 7 giờ mỗi
+sáng không'', hệ thống phải (i) gán được các đoạn sự kiện cho đúng người và đúng hoạt động, rồi
+(ii) từ đó rút ra thói quen của từng người.
+
+Khóa luận giải bài toán: \textbf{từ luồng sự kiện cảm biến trộn lẫn của nhà hai người, tìm đúng
+thói quen của từng người}, và chứng minh thói quen tìm được dùng được để \textbf{phát hiện ngày bỏ
+thuốc}.
+
+\section{Câu hỏi nghiên cứu}
+
+Khóa luận trả lời ba câu hỏi nghiên cứu:
+
+\begin{description}[leftmargin=1.3cm,style=sameline]
+  \item[RQ1] Gán các đoạn sự kiện cảm biến cho \emph{đúng người và đúng hoạt động} chính xác đến
+  đâu, khi chỉ dùng cảm biến môi trường và đánh giá theo thứ tự thời gian?
+  \item[RQ2] Từ kết quả của RQ1, thói quen của từng người tìm được \emph{đúng đến đâu} so với thói
+  quen đáp án? Lỗi ở khâu nhận dạng --- bỏ sót, lệch giờ, nhận nhầm, \emph{nhầm người} --- lan
+  truyền sang thói quen như thế nào? (Câu hỏi trung tâm.)
+  \item[RQ3] Thói quen học được có phát hiện được \emph{ngày bỏ thuốc} không, và tốt hơn cách tiếp
+  cận theo phòng đến đâu?
+\end{description}
+
+\section{Mục tiêu và phạm vi}
+
+\textbf{Mục tiêu.} Xây dựng và đánh giá một quy trình đầu--cuối đi từ nhật ký cảm biến thô tới
+danh sách thói quen của từng người; đưa ra định nghĩa đo được của khái niệm ``thói quen theo từng
+người'' cùng bộ chỉ số đánh giá ở mức thói quen.
+
+\textbf{Phạm vi} (được chốt trước khi thực hiện để tránh thay đổi giữa chừng):
+\begin{itemize}
+  \item \emph{Trong phạm vi:} nhà hai người; dữ liệu công khai CASAS (Cairo, Tulum1, Tulum2 là nhà
+  hai người; Milan, Aruba là nhà một người dùng để đối chứng); đánh giá ngoại tuyến, chia dữ liệu
+  theo ngày; các phương pháp baseline và mô hình học trình bày ở Chương~\ref{chap:method}.
+  \item \emph{Ngoài phạm vi:} camera, thiết bị đeo; mô hình ngôn ngữ lớn và mô hình nền; nhà từ ba
+  người trở lên; tự thu thập dữ liệu; gán người cho \emph{từng} sự kiện cảm biến (dữ liệu không
+  có nhãn này); học trực tuyến; dự đoán hành động tiếp theo; ứng dụng nhắc nhở thật, điều khiển
+  thiết bị, robot.
+\end{itemize}
+
+\section{Đóng góp}
+
+\begin{enumerate}
+  \item \textbf{Định nghĩa và thuật toán thói quen.} Phát biểu hình thức khái niệm thói quen theo
+  từng người và hiện thực nó thành thuật toán \emph{quét cửa sổ} đếm theo ngày, khắc phục hiện
+  tượng ``chuỗi hóa'' của DBSCAN mà đề tài thực tập gặp phải.
+  \item \textbf{Bộ đánh giá ở mức thói quen.} Thói quen đáp án, phép so khớp một--một bằng thuật
+  toán Hungary và các chỉ số precision, recall, F1, sai số giờ, sai số tần suất; tách riêng đánh
+  giá thói quen gắn với từng người.
+  \item \textbf{So sánh có kiểm soát} năm cách tiếp cận (hai baseline không nhãn, một baseline tra
+  bảng, Random Forest, Bi-GRU) và giới hạn trên Oracle trên năm nhà, đánh giá theo thứ tự thời gian.
+  \item \textbf{Phân tích lỗi lan truyền}: làm nhiễu nhãn thật có kiểm soát để đo thói quen nhạy
+  với từng loại lỗi nhận dạng đến đâu, kể cả lỗi \emph{tráo người} đặc trưng của nhà nhiều người.
+  \item \textbf{Thí nghiệm ứng dụng} phát hiện ngày bỏ thuốc trên dữ liệu thật có cài bất thường.
+  \item Mã nguồn mở, có kiểm thử, tái lập toàn bộ số liệu bằng một lệnh.
+\end{enumerate}
+
+\section{Ý nghĩa khoa học và thực tiễn}
+
+\textbf{Về khoa học}, khóa luận nối hai hướng nghiên cứu đang tách rời: nhận dạng hoạt động trong
+nhà nhiều người~\cite{chen2021thesis,wang2021smrt,chen2026mdp} và khai phá mẫu sinh hoạt vốn mới
+được kiểm chứng trên nhà một người~\cite{karpekov2025discover}. Việc đo lỗi lan truyền cho biết
+khâu nhận dạng cần tốt đến đâu thì thói quen mới đáng tin --- thông tin hữu ích để quyết định đầu
+tư cho khâu nào.
+
+\textbf{Về thực tiễn}, thói quen theo từng người là lớp nền cho các ứng dụng chăm sóc người cao
+tuổi trong những ngôi nhà có nhiều hơn một người --- trường hợp phổ biến nhưng ít được nghiên cứu.
+Chỉ dùng cảm biến môi trường giúp giải pháp rẻ và tôn trọng quyền riêng tư.
+
+\textbf{Giới hạn cần nói rõ}: dữ liệu thu ở Mỹ giai đoạn 2009--2011 với tối đa hai người; bất
+thường trong RQ3 là bất thường \emph{cài vào}; khóa luận không khẳng định hệ thống dùng được ngay
+cho nhà thật ở Việt Nam.
+
+\section{Cấu trúc khóa luận}
+
+\begin{itemize}
+  \item \textbf{Chương~\ref{chap:background}} tổng quan nhà thông minh, nhận dạng hoạt động, bài
+  toán nhà nhiều người, khai phá mẫu sinh hoạt và các kiến thức nền; định vị khoảng trống.
+  \item \textbf{Chương~\ref{chap:method}} phát biểu hình thức bài toán, định nghĩa thói quen và
+  trình bày toàn bộ quy trình cùng cách đánh giá.
+  \item \textbf{Chương~\ref{chap:exp}} trình bày dữ liệu, thiết lập và kết quả thực nghiệm cho ba
+  câu hỏi nghiên cứu, ablation và phân tích độ nhạy.
+  \item \textbf{Chương~\ref{chap:conclusion}} tổng kết, nêu hạn chế và hướng phát triển.
+\end{itemize}

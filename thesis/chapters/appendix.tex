@@ -1,0 +1,75 @@
+\addtocontents{toc}{\protect\renewcommand{\protect\cftchappresnum}{Phụ lục\ }}
+\addtocontents{toc}{\protect\setlength{\protect\cftchapnumwidth}{6.5em}}
+
+\chapter{Chọn cấu hình Bi-GRU}
+\label{app:gru}
+
+Mô hình M2 có dấu hiệu học quá khớp ngay từ epoch thứ hai (mất mát huấn luyện giảm, mất mát kiểm định
+tăng). Ba cấu hình được thử trên tập kiểm định của Cairo (25\% số ngày cuối của tập huấn luyện); cấu hình
+có mất mát kiểm định nhỏ nhất được dùng cho mọi nhà. Tập kiểm tra không được dùng ở bước này.
+
+\begin{table}[htbp]
+\centering
+\caption{Ba cấu hình Bi-GRU thử trên tập kiểm định Cairo}
+\label{tab:gru-config}
+\begin{tabular}{rrrrr}
+\toprule
+Số đơn vị ẩn & Dropout & Tốc độ học & Weight decay & Mất mát kiểm định \\
+\midrule
+\textbf{64} & \textbf{0,2} & $\mathbf{10^{-3}}$ & \textbf{0} & \textbf{0,3626} \\
+32 & 0,3 & $5\cdot10^{-4}$ & $10^{-4}$ & 0,3645 \\
+32 & 0,5 & $3\cdot10^{-4}$ & $10^{-3}$ & 0,3772 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Phân vùng thủ công của Cairo}
+\label{app:cairo-zones}
+
+Phân vùng dưới đây đọc từ sơ đồ mặt bằng chính thức~\cite{casas2025floorplans}, chỉ dùng để kiểm chứng
+phân vùng tự động ở mục~\ref{sec:m-topo}; không được dùng trong bất kỳ phương pháp nào.
+
+\begin{table}[htbp]
+\centering
+\caption{Bảy vùng của nhà Cairo theo sơ đồ mặt bằng}
+\label{tab:cairo-manual}
+\begin{tabular}{lll}
+\toprule
+Tầng & Vùng & Cảm biến \\
+\midrule
+Tầng chính & Bếp & M019, M020, M021, M022, M024 \\
+           & Phòng khách -- ăn & M013, M016, M017, M018, M023 \\
+           & Hành lang, cầu thang & M011, M012, M014, M015 \\
+Tầng trên  & Phòng ngủ & M005, M006, M007, M008, M009 \\
+           & Phòng trái & M001, M002, M003, M010 \\
+           & Phòng phải & M004 \\
+Tầng hầm   & Giặt là & M025, M026, M027 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Tái lập kết quả}
+\label{app:repro}
+
+Toàn bộ số liệu, bảng và hình trong khóa luận được sinh từ mã nguồn đi kèm. Sau khi cài đặt, các lệnh sau
+lần lượt chạy thực nghiệm chính cho năm nhà, chạy đánh giá qua ba lần chia theo thời gian, sinh bảng và hình
+cho khóa luận, và chạy bộ kiểm thử tự động:
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Lệnh & Tác dụng\\
+\midrule
+\verb|pip install -e ".[dev]"| & cài đặt gói mã nguồn và công cụ kiểm thử\\
+\verb|python -m mrhabits.cli run| & thực nghiệm chính cho năm nhà\\
+\verb|python -m mrhabits.cli rolling| & đánh giá qua ba lần chia theo thời gian\\
+\verb|python -m mrhabits.cli figures| & sinh bảng và hình cho khóa luận\\
+\verb|python -m pytest| & chạy bộ kiểm thử tự động\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Dữ liệu đặt tại \texttt{data/raw/casas/new\_labeled\_data.zip} (tải từ Zenodo, bản ghi 17180309). Các hạt
+giống ngẫu nhiên được cố định (Random Forest: 0; Bi-GRU: 0; cài bất thường: 0--4; làm nhiễu nhãn: 1000--1004).
+Cấu hình đầy đủ được ghi vào \texttt{results/config.json} mỗi lần chạy. Thực nghiệm chính mất khoảng một giờ
+trên máy tính xách tay 12 luồng CPU, không dùng GPU.

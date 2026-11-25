@@ -1,0 +1,32 @@
+# Python / tooling
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.DS_Store
+
+# Dữ liệu tải về (xem README để tải lại)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Kết quả: giữ CSV/JSON (khóa luận trích dẫn), bỏ xác suất dự đoán (lớn, tái tạo được)
+results/*/pred_*.npz
+
+# LaTeX build
+thesis/*.aux
+thesis/*.log
+thesis/*.out
+thesis/*.toc
+thesis/*.lof
+thesis/*.lot
+thesis/*.bbl
+thesis/*.blg
+thesis/*.synctex.gz
+thesis/*.fdb_latexmk
+thesis/*.fls
+
