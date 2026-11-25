@@ -254,13 +254,14 @@ def tables(res: Path, tabdir: Path) -> dict:
             row = {"Phương pháp": s}
             for hh in hl:
                 x = g[g["home"] == hh]["f1"]
-                row[hh] = _pm(x.mean(), x.std())
+                row[f"{hh} ({r[r['home'] == hh]['fold'].nunique()} lần)"] = _pm(x.mean(), x.std())
             row["Trung bình"] = _r2(g.groupby("home")["f1"].mean().mean()).replace(".", "{,}")
             tab.append(row)
         tab = pd.DataFrame(tab); out["rolling"] = tab
         _tex_table(tab, tabdir / "rolling.tex",
-                   "F1 thói quen qua ba lần chia theo thời gian (trung bình $\\pm$ độ lệch chuẩn; mỗi lần "
-                   "kiểm tra trên 20\\% số ngày kế tiếp mốc huấn luyện)", "tab:rolling",
+                   "F1 thói quen của ba nhà hai người qua nhiều lần chia theo thời gian (trung bình $\\pm$ "
+                   "độ lệch chuẩn; mỗi lần kiểm tra trên 20\\% số ngày kế tiếp mốc huấn luyện; trong ngoặc: "
+                   "số lần chia)", "tab:rolling",
                    "l" + "c" * (len(tab.columns) - 1))
         # So sánh cặp M1+H với B0 và B2+H trên mọi (nhà, lần chia).
         from scipy.stats import wilcoxon
@@ -471,6 +472,125 @@ def fig_rq3(res: Path, figdir: Path):
     _save(fig, figdir, "rq3_detection")
 
 
+ACT_VI = {"Breakfast": "Ăn sáng", "Lunch": "Ăn trưa", "Dinner": "Ăn tối", "R1_Wake": "R1 thức dậy",
+          "R2_Wake": "R2 thức dậy", "R1_Sleep": "R1 ngủ", "R2_Sleep": "R2 ngủ", "R1_Work": "R1 làm việc",
+          "R2_Take_Medicine": "R2 uống thuốc", "Night_Wandering": "Đi lại ban đêm",
+          "Bed_to_Toilet": "Đi vệ sinh đêm", "Leave_Home": "Rời nhà", "Laundry": "Giặt đồ"}
+
+
+def fig_activity_hours(res: Path, figdir: Path, home: str = "cairo"):
+    """Giờ bắt đầu của mọi lần thực hiện theo hoạt động (nhãn thật, toàn bộ dữ liệu)."""
+    from .habits import hour_of
+    from .io import load_home
+    h = load_home(home)
+    ep = h.episodes.copy()
+    ep["h"] = hour_of(ep["start"])
+    acts = [a for a, c in ep["activity"].value_counts().items() if c >= 5]
+    acts = sorted(acts, key=lambda a: ep.loc[ep["activity"] == a, "h"].median())
+    col = {"R1": SERIES[0], "R2": SERIES[1], "H": MUTED}
+    fig, ax = plt.subplots(figsize=(6.4, 0.32 * len(acts) + 1.0))
+    rng = np.random.default_rng(0)
+    seen = set()
+    for i, a in enumerate(acts):
+        g = ep[ep["activity"] == a]
+        r = g["resident"].iloc[0]
+        lab = {"R1": "Gắn với R1", "R2": "Gắn với R2", "H": "Chung của hộ"}[r]
+        ax.scatter(g["h"], i + rng.uniform(-0.22, 0.22, len(g)), s=7, color=col[r], alpha=0.7,
+                   linewidths=0, label=None if lab in seen else lab)
+        seen.add(lab)
+    ax.set_yticks(range(len(acts)), [ACT_VI.get(a, a) for a in acts], fontsize=7.5)
+    ax.set_xlim(0, 24); ax.set_xticks(range(0, 25, 3)); ax.invert_yaxis()
+    ax.set_xlabel(f"Giờ bắt đầu (mỗi chấm là một lần thực hiện, toàn bộ {len(h.days)} ngày)")
+    ax.legend(ncol=3, loc="lower center", bbox_to_anchor=(0.5, 1.0), fontsize=7.5, markerscale=2)
+    _save(fig, figdir, f"activity_hours_{home}")
+
+
+def fig_topology(res: Path, figdir: Path, home: str = "cairo"):
+    """Đồ thị kề cảm biến rút ra từ dữ liệu huấn luyện, tô màu theo vùng."""
+    import networkx as nx
+    from .experiments import CONFIG
+    from .io import load_home, motion_on, split_days
+    from .topology import build_topology
+    h = load_home(home); tr, _ = split_days(h.days, CONFIG["train_ratio"])
+    mo = motion_on(h.events)
+    topo = build_topology(mo[mo["day"].isin(tr)].reset_index(drop=True))
+    G = nx.Graph()
+    G.add_nodes_from(topo.sensors)
+    A = topo.adjacency
+    for i, a in enumerate(topo.sensors):
+        for j in range(i + 1, len(topo.sensors)):
+            if A[i, j]:
+                G.add_edge(a, topo.sensors[j])
+    pos = nx.kamada_kawai_layout(G)
+    fig, ax = plt.subplots(figsize=(6.4, 4.2))
+    nx.draw_networkx_edges(G, pos, ax=ax, edge_color=MUTED, width=0.8)
+    for z in range(topo.n_zones):
+        nodes = [s for s in topo.sensors if topo.zone[s] == z]
+        nx.draw_networkx_nodes(G, pos, nodelist=nodes, ax=ax, node_size=230, node_color=SERIES[z % len(SERIES)],
+                               label=f"Vùng {z + 1}")
+    nx.draw_networkx_labels(G, pos, {s: s[1:].lstrip("0") for s in topo.sensors}, ax=ax, font_size=6,
+                            font_color="white", font_weight="bold")
+    ax.set_axis_off()
+    ax.legend(ncol=min(topo.n_zones, 6), loc="lower center", bbox_to_anchor=(0.5, -0.08), fontsize=7.5,
+              markerscale=0.6)
+    _save(fig, figdir, f"topology_{home}")
+
+
+def fig_rf_importance(res: Path, figdir: Path, home: str = "cairo"):
+    """Mức quan trọng (giảm Gini) của từng nhóm đặc trưng trong M1, huấn luyện như thực nghiệm chính."""
+    from .experiments import CONFIG
+    from .io import active_labels, load_home, motion_on, split_days
+    from .recognition import ForestRecognizer
+    from .topology import build_topology
+    info = json.loads((res / home / "info.json").read_text(encoding="utf-8"))
+    h = load_home(home); tr, _ = split_days(h.days, CONFIG["train_ratio"])
+    mo = motion_on(h.events)
+    ev = mo[mo["day"].isin(tr)].reset_index(drop=True)
+    topo = build_topology(ev)
+    rec = ForestRecognizer(topo, **CONFIG["rf"]).fit(ev, active_labels(ev, h.episodes, info["activities_modeled"]))
+    imp = rec.rf.feature_importances_
+    S, Z = len(topo.sensors), topo.n_zones
+    groups = [("Tần suất mỗi cảm biến trong cửa sổ", S), ("Cảm biến hiện tại", S), ("Vùng hiện tại", Z),
+              ("Giờ trong ngày (sin, cos)", 2), ("Cuối tuần", 1), ("Độ dài cửa sổ", 1),
+              ("Khoảng cách tới sự kiện trước", 1), ("Tỉ lệ nhảy xa", 1), ("Số cảm biến phân biệt", 1)]
+    vals, k = [], 0
+    for name, n in groups:
+        vals.append((name, float(imp[k:k + n].sum()), n)); k += n
+    vals.sort(key=lambda x: x[1])
+    pd.DataFrame(vals, columns=["group", "importance", "n_features"]).to_csv(
+        res / home / "rf_importance.csv", index=False)
+    fig, ax = plt.subplots(figsize=(6.0, 2.8))
+    ax.barh([f"{n} ({c})" for n, _, c in vals], [v for _, v, _ in vals], color=SERIES[3], height=0.65)
+    for i, (_, v, _) in enumerate(vals):
+        ax.text(v + 0.005, i, _r2(v).replace(".", ","), va="center", fontsize=7.5, color=INK)
+    ax.set_xlabel("Tổng mức quan trọng (giảm Gini) của nhóm; trong ngoặc: số đặc trưng")
+    ax.tick_params(axis="y", labelsize=7.5)
+    ax.grid(axis="y", visible=False)
+    _save(fig, figdir, f"rf_importance_{home}")
+
+
+def fig_rolling(res: Path, figdir: Path):
+    """F1 thói quen của từng lần chia (chấm) và trung bình (gạch) theo nhà và phương pháp."""
+    homes = [h for h in HOMES if (res / h / "rolling.csv").exists()]
+    if not homes:
+        return
+    srcs = ["B0", "B2+H", "M1+H", "M2+H"]
+    fig, ax = plt.subplots(figsize=(6.4, 2.7))
+    n = len(srcs); w = 0.8 / n
+    for i, s in enumerate(srcs):
+        for k, h in enumerate(homes):
+            r = pd.read_csv(res / h / "rolling.csv")
+            v = r[r["source"] == s]["f1"].to_numpy()
+            x = k + (i - (n - 1) / 2) * w
+            ax.scatter(np.full(len(v), x), v, s=12, color=SOURCE_COLOR[s], alpha=0.8, linewidths=0,
+                       label=s if k == 0 else None)
+            ax.plot([x - w * 0.38, x + w * 0.38], [v.mean()] * 2, color=SOURCE_COLOR[s], lw=2.2)
+    ax.set_xticks(range(len(homes)), [HOME_LABEL[h] for h in homes])
+    ax.set_ylim(0, 1.0); ax.set_ylabel("F1 thói quen")
+    ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, 1.17), fontsize=8)
+    _save(fig, figdir, "rolling")
+
+
 def table_false_habits(res: Path, tabdir: Path, home: str = "cairo", model: str = "M1"):
     """Phân tích thói quen giả của ``model``+H: mỗi thói quen dự đoán không khớp đáp án
     được truy về nhãn thật của các lần thực hiện tạo nên nó."""
@@ -536,7 +656,8 @@ def build_all(res: Path, thesis_dir: Path = Path("thesis")):
         out["false_habits"] = table_false_habits(res, tabdir)
     except Exception as e:
         print(f"[report] table_false_habits: {e}")
-    for f in (fig_rq1, fig_rq2, fig_propagation, fig_rq3, fig_b0_failure):
+    for f in (fig_rq1, fig_rq2, fig_propagation, fig_rq3, fig_b0_failure, fig_activity_hours,
+              fig_topology, fig_rf_importance, fig_rolling):
         try:
             f(res, figdir)
         except Exception as e:  # một hình lỗi không làm hỏng các hình khác

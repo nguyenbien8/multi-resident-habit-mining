@@ -127,39 +127,119 @@ và được nhắc lại trong phần hướng phát triển.
 \section{Kiến thức nền}
 \label{sec:bg-tools}
 
+Mục này trình bày các công cụ toán học và học máy được dùng trong các chương sau, ở mức đủ để theo dõi
+phương pháp và diễn giải kết quả.
+
 \subsection{Thống kê vòng tròn}
+\label{sec:bg-circular}
 Giờ trong ngày là đại lượng tuần hoàn: 23:50 và 00:10 chỉ cách nhau 20 phút nhưng nếu biểu diễn bằng
-số thực (23,83 và 0,17) thì cách nhau gần một ngày. Cách xử lý chuẩn~\cite{fisher1993circular} là
-đặt giờ $h$ lên vòng tròn với góc $\theta = 2\pi h/24$. Trung bình vòng tròn của các giờ
-$h_1,\dots,h_n$ là
+số thực (23,83 và 0,17) thì cách nhau gần một ngày, và trung bình cộng của chúng là 12:00 --- hoàn toàn
+sai. Cách xử lý chuẩn~\cite{fisher1993circular} là đặt giờ $h$ lên vòng tròn đơn vị với góc
+$\theta = 2\pi h/24$, tức điểm $(\cos\theta, \sin\theta)$. Trung bình vòng tròn của các giờ $h_1,\dots,h_n$
+là hướng của vector trung bình:
 \begin{equation}
-  \bar h = \frac{24}{2\pi}\,\operatorname{atan2}\Big(\tfrac1n\textstyle\sum_i \sin\theta_i,\;
-  \tfrac1n\sum_i \cos\theta_i\Big) \bmod 24,
+  \bar C = \frac1n\sum_{i=1}^{n} \cos\theta_i,\qquad \bar S = \frac1n\sum_{i=1}^{n} \sin\theta_i,\qquad
+  \bar h = \frac{24}{2\pi}\,\operatorname{atan2}(\bar S, \bar C) \bmod 24.
+  \label{eq:circ-mean}
 \end{equation}
-và chênh lệch có dấu giữa hai giờ là $\delta(a,b) = \big((a-b+12) \bmod 24\big) - 12 \in [-12, 12)$.
+Với ví dụ trên, $\bar h = $ 00:00 như mong đợi. Độ dài vector trung bình $\bar R = \sqrt{\bar C^2 + \bar S^2}
+\in [0, 1]$ đo mức tập trung: $\bar R$ gần 1 khi các giờ sát nhau, gần 0 khi chúng rải đều quanh ngày.
+Chênh lệch có dấu giữa hai giờ được tính trên vòng tròn:
+\begin{equation}
+  \delta(a,b) = \big((a-b+12) \bmod 24\big) - 12 \in [-12, 12),
+  \label{eq:circ-diff}
+\end{equation}
+nên $\delta(\text{00:10}, \text{23:50}) = +20$ phút. Khóa luận mô tả độ trải của một thói quen bằng
+\emph{khung 80\%}: cung ngắn nhất trên vòng tròn chứa 80\% số giờ quan sát.
 
 \subsection{Phân cụm theo mật độ}
-DBSCAN~\cite{ester1996dbscan} gom các điểm có ít nhất \texttt{min\_samples} láng giềng trong bán
-kính $\varepsilon$ thành cụm, các điểm còn lại là nhiễu; không cần biết trước số cụm. Nhược điểm
-liên quan trực tiếp tới khóa luận: các điểm có thể ``nối chuỗi'' qua nhau, nên một hoạt động diễn
-ra rải rác cả ngày tạo thành một cụm kéo dài cả ngày. HDBSCAN~\cite{campello2013hdbscan} xây cây
-phân cấp mật độ và chọn cụm ổn định nhất, không cần $\varepsilon$ nhưng vì thế cũng không có khái
-niệm ``lệch không quá 30 phút''.
+\label{sec:bg-dbscan}
+DBSCAN~\cite{ester1996dbscan} định nghĩa cụm dựa trên mật độ. Với bán kính $\varepsilon$ và ngưỡng
+\texttt{min\_samples}, một điểm là \emph{điểm lõi} nếu có ít nhất \texttt{min\_samples} điểm trong
+bán kính $\varepsilon$ quanh nó. Hai điểm thuộc cùng cụm nếu nối được với nhau bằng một dãy điểm lõi, mỗi
+điểm cách điểm kế tiếp không quá $\varepsilon$ (\emph{liên thông mật độ}); điểm không thuộc cụm nào là nhiễu.
+DBSCAN không cần biết trước số cụm và chịu được nhiễu, nên đề tài thực tập đã dùng nó để gom các phiên có
+giờ bắt đầu gần nhau.
 
-\subsection{Rừng ngẫu nhiên và mạng hồi quy}
-Rừng ngẫu nhiên~\cite{breiman2001rf} kết hợp nhiều cây quyết định học trên các mẫu bootstrap và tập
-con đặc trưng ngẫu nhiên; ổn định, ít cần tinh chỉnh và hỗ trợ trực tiếp bài toán nhiều đầu ra. GRU
-\cite{cho2014gru} là mạng hồi quy có cổng cập nhật và cổng đặt lại; phiên bản hai chiều
-\cite{schuster1997brnn} đọc chuỗi theo cả hai chiều rồi ghép trạng thái ẩn.
+Chính định nghĩa ``liên thông qua dãy điểm'' tạo ra nhược điểm quan trọng với khóa luận: hiện tượng
+\emph{chuỗi hóa}. Nếu một hoạt động diễn ra rải rác --- 7:00, 7:20, 7:40, \dots, 19:00 --- mỗi cặp liên
+tiếp đều đủ gần nhau nên cả dãy thành \emph{một} cụm trải 12 giờ, dù hai đầu cụm cách nhau rất xa. Khi
+đó khái niệm ``thói quen lúc khoảng 7 giờ'' bị mất. HDBSCAN~\cite{campello2013hdbscan} xây cây phân cấp
+của các cụm ở mọi mức mật độ rồi chọn các cụm ``ổn định'' nhất; nó không cần $\varepsilon$, nhưng vì thế
+cũng không có ràng buộc tường minh nào kiểu ``lệch không quá 30 phút''. Mục~\ref{sec:exp-ablation} đo cả
+hai hiện tượng này trên dữ liệu thật.
+
+\subsection{Cây quyết định và rừng ngẫu nhiên}
+\label{sec:bg-rf}
+Cây quyết định chia không gian đặc trưng bằng các câu hỏi dạng ``$x_j \le t$?''. Tại mỗi nút, phép chia
+được chọn để giảm nhiều nhất \emph{độ vẩn đục Gini} của các nút con; với nút chứa các mẫu có tỉ lệ lớp
+$p_1, \dots, p_K$,
+\begin{equation}
+  G = 1 - \sum_{k=1}^{K} p_k^2 ,
+\end{equation}
+$G = 0$ khi nút chỉ chứa một lớp. Một cây sâu khớp rất tốt dữ liệu huấn luyện nhưng phương sai lớn.
+
+Rừng ngẫu nhiên~\cite{breiman2001rf} giảm phương sai bằng cách lấy trung bình nhiều cây khác nhau: mỗi cây
+học trên một mẫu \emph{bootstrap} (lấy mẫu có hoàn lại) của dữ liệu, và tại mỗi nút chỉ xét một tập con
+ngẫu nhiên khoảng $\sqrt{d}$ trong $d$ đặc trưng. Xác suất dự đoán là trung bình xác suất của các cây.
+Rừng ngẫu nhiên ít cần tinh chỉnh, hỗ trợ trực tiếp bài toán nhiều đầu ra và cho sẵn một thước đo
+\emph{mức quan trọng của đặc trưng}: tổng lượng giảm Gini mà đặc trưng đó mang lại trên mọi nút của mọi cây,
+chuẩn hóa để tổng bằng 1. Thước đo này được dùng ở Chương~\ref{chap:exp} để biết mô hình dựa vào thông tin
+gì. Với dữ liệu mất cân bằng --- mỗi hoạt động chỉ chiếm một phần nhỏ thời gian --- trọng số lớp được đặt
+tỉ lệ nghịch với tần suất lớp trong từng mẫu bootstrap.
+
+\subsection{Mạng hồi quy có cổng GRU}
+\label{sec:bg-gru}
+Mạng hồi quy đọc chuỗi $x_1, \dots, x_T$ và cập nhật một trạng thái ẩn $h_t$ tóm tắt quá khứ. GRU~\cite{cho2014gru}
+dùng hai cổng để kiểm soát việc nhớ và quên:
+\begin{align}
+  z_t &= \sigma(W_z x_t + U_z h_{t-1} + b_z) && \text{(cổng cập nhật)}\\
+  r_t &= \sigma(W_r x_t + U_r h_{t-1} + b_r) && \text{(cổng đặt lại)}\\
+  \tilde h_t &= \tanh\big(W_h x_t + U_h (r_t \odot h_{t-1}) + b_h\big)\\
+  h_t &= (1 - z_t) \odot h_{t-1} + z_t \odot \tilde h_t ,
+\end{align}
+trong đó $\sigma$ là hàm sigmoid và $\odot$ là phép nhân từng phần tử. Khi $z_t \approx 0$ trạng thái cũ
+được giữ nguyên, nhờ đó mạng nhớ được thông tin xa hơn mạng hồi quy thường. Mạng hai
+chiều~\cite{schuster1997brnn} chạy thêm một GRU theo chiều ngược và ghép hai trạng thái ẩn cuối.
+
+Với bài toán đa nhãn, mỗi hoạt động $k$ có một đầu ra sigmoid $\hat y_k$, và hàm mất mát là entropy chéo
+nhị phân có trọng số cho lớp dương:
+\begin{equation}
+  \mathcal L = -\frac{1}{K}\sum_{k=1}^{K}\Big(w_k\, y_k \log \hat y_k + (1 - y_k)\log(1 - \hat y_k)\Big),
+  \label{eq:bce}
+\end{equation}
+với $w_k > 1$ bù cho việc lớp dương hiếm. Mạng được tối ưu bằng Adam; \emph{dừng sớm} --- dừng khi mất mát
+trên tập kiểm định không giảm sau vài epoch --- được dùng để tránh học quá khớp.
 
 \subsection{Phân cụm phổ}
-Phân cụm phổ~\cite{vonluxburg2007spectral} dùng các vector riêng của ma trận Laplacian chuẩn hóa
-$L = I - D^{-1/2} A D^{-1/2}$ của đồ thị tương đồng $A$. Số cụm có thể chọn theo \emph{khoảng cách
-trị riêng}: $k$ là vị trí có bước nhảy lớn nhất giữa hai trị riêng liên tiếp nhỏ nhất.
+\label{sec:bg-spectral}
+Phân cụm phổ~\cite{vonluxburg2007spectral} gom các đỉnh của một đồ thị có trọng số $A$ (ở đây: tần suất
+chuyển tiếp giữa hai cảm biến) thành $k$ nhóm sao cho cạnh trong nhóm mạnh, cạnh giữa các nhóm yếu. Các
+bước gồm: (i) tính ma trận Laplacian chuẩn hóa $L = I - D^{-1/2} A D^{-1/2}$, với $D$ là ma trận đường chéo
+bậc của các đỉnh; (ii) lấy $k$ vector riêng ứng với $k$ trị riêng nhỏ nhất của $L$ xếp thành các cột của
+ma trận $U$; (iii) chuẩn hóa từng hàng của $U$ rồi chạy k-means trên các hàng. Nếu đồ thị gồm $k$ thành phần
+gần như tách rời, $L$ có đúng $k$ trị riêng gần 0 và sau đó một bước nhảy; vì vậy $k$ được chọn theo
+\emph{khoảng cách trị riêng} --- vị trí bước nhảy lớn nhất giữa hai trị riêng liên tiếp nhỏ nhất.
 
-\subsection{Bài toán ghép cặp}
-Để so khớp một--một hai tập phần tử theo một ma trận chi phí, thuật toán Hungary~\cite{kuhn1955hungarian}
-tìm cách ghép có tổng chi phí nhỏ nhất trong thời gian đa thức.
+\subsection{Bài toán ghép cặp và thuật toán Hungary}
+\label{sec:bg-hungarian}
+Cho $m$ thói quen dự đoán, $n$ thói quen đáp án và ma trận chi phí $c_{ij}$ (ở đây: chênh lệch giờ điển
+hình), bài toán ghép cặp tìm $x_{ij} \in \{0,1\}$ cực tiểu hóa $\sum_{i,j} c_{ij} x_{ij}$ với ràng buộc mỗi
+phần tử được ghép nhiều nhất một lần. Thuật toán Hungary~\cite{kuhn1955hungarian} giải chính xác bài toán
+trong thời gian $O(\max(m,n)^3)$. So với ghép tham lam (mỗi dự đoán lấy đáp án gần nhất), ghép tối ưu tránh
+được việc hai dự đoán cùng ``tranh'' một đáp án.
+
+\subsection{Chỉ số đánh giá}
+\label{sec:bg-metrics}
+Với số dương đúng $TP$, dương sai $FP$ và âm sai $FN$:
+\begin{equation}
+  P = \frac{TP}{TP + FP},\qquad R = \frac{TP}{TP + FN},\qquad F1 = \frac{2PR}{P + R}.
+\end{equation}
+Với nhiều lớp, \emph{macro-F1} là trung bình F1 của từng lớp (mỗi lớp có trọng số như nhau, nên lớp hiếm
+như ``uống thuốc'' ảnh hưởng nhiều); \emph{micro-F1} cộng dồn $TP, FP, FN$ của mọi lớp rồi mới tính F1
+(lớp phổ biến chi phối). Chỉ số Rand hiệu chỉnh (ARI) so sánh hai cách phân nhóm cùng một tập phần tử:
+bằng 1 khi hai cách giống hệt, xấp xỉ 0 khi giống nhau chỉ ở mức ngẫu nhiên; khóa luận dùng ARI để so phân
+vùng cảm biến tự động với phân vùng đọc từ sơ đồ nhà.
 
 \section{Khoảng trống nghiên cứu và vị trí của khóa luận}
 \label{sec:bg-gap}

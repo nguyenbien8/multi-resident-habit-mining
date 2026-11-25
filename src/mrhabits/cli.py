@@ -20,7 +20,7 @@ def main(argv=None):
     r.add_argument("--models", nargs="+", default=["B2", "M1", "M2"])
     r.add_argument("--out", default="results")
     ro = sub.add_parser("rolling", help="RQ2 trên ba lần chia theo thời gian")
-    ro.add_argument("--homes", nargs="+", default=list(DATASETS), choices=DATASETS)
+    ro.add_argument("--homes", nargs="+", default=["cairo", "tulum1", "tulum2"], choices=DATASETS)
     ro.add_argument("--models", nargs="+", default=["B2", "M1", "M2"])
     ro.add_argument("--out", default="results")
     f = sub.add_parser("figures", help="vẽ hình và bảng tổng hợp từ results/")

@@ -3,8 +3,8 @@
 
 Chương này trình bày dữ liệu (mục~\ref{sec:exp-data}), thiết lập thực nghiệm (mục~\ref{sec:exp-setup}),
 rồi lần lượt kết quả: vì sao phương pháp thực tập không dùng được cho nhà hai người
-(mục~\ref{sec:exp-b0}), RQ1 (mục~\ref{sec:exp-rq1}), RQ2 (mục~\ref{sec:exp-rq2}), phân tích lỗi lan
-truyền (mục~\ref{sec:exp-prop}), ablation và độ nhạy (mục~\ref{sec:exp-ablation}), RQ3
+(mục~\ref{sec:exp-b0}), RQ1 (mục~\ref{sec:exp-rq1}), RQ2 (mục~\ref{sec:exp-rq2}), độ ổn định qua nhiều
+lần chia (mục~\ref{sec:exp-rolling}), phân tích lỗi lan truyền (mục~\ref{sec:exp-prop}), ablation và độ nhạy (mục~\ref{sec:exp-ablation}), RQ3
 (mục~\ref{sec:exp-rq3}) và thảo luận (mục~\ref{sec:exp-discussion}). Mọi số liệu được sinh từ mã nguồn
 đi kèm bằng một lệnh (Phụ lục~\ref{app:repro}).
 
@@ -25,6 +25,22 @@ Kiểm định dữ liệu cho thấy: không có dòng sai định dạng; mộ
 việc của R1; uống thuốc của R2), Tulum1 có ba, Tulum2 chỉ có hai (ngủ của hai người, và hai người ngủ
 cùng giường). Vì vậy \emph{Cairo là nhà chính để đánh giá thói quen từng người}; Tulum1 và Tulum2 chủ
 yếu đóng góp thói quen chung của hộ.
+
+\textbf{Nhịp sinh hoạt ở Cairo.} Hình~\ref{fig:hours} vẽ giờ bắt đầu của mọi lần thực hiện có nhãn trong
+toàn bộ dữ liệu Cairo. Ba quan sát định hướng cho phần còn lại của chương. Thứ nhất, các bữa ăn và giấc ngủ
+rất đều: phần lớn các bữa tối bắt đầu trong khoảng 17:30--18:30 và phần lớn các lần đi ngủ của hai người
+rơi vào 20:00--22:00. Thứ hai,
+buổi sáng là khung giờ ``đông đúc'' nhất: R1 thức dậy, R2 thức dậy, R2 uống thuốc và bữa sáng chung đều rơi
+vào 06:00--09:30 --- đúng chỗ khó cho mọi phương pháp chỉ dựa vào giờ. Thứ ba, một số hoạt động không có giờ
+cố định (rời nhà, R1 làm việc, giặt đồ) và sẽ không tạo thành thói quen theo định nghĩa.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{activity_hours_cairo}
+\caption{Giờ bắt đầu của các lần thực hiện có nhãn ở Cairo, tô màu theo người. Buổi sáng có bốn hoạt động
+chồng lấn: R1 thức dậy, R2 thức dậy, R2 uống thuốc và ăn sáng.}
+\label{fig:hours}
+\end{figure}
 
 \textbf{Cấu trúc nhà.} Phân vùng tự động (mục~\ref{sec:m-topo}) chọn 6 vùng cho Cairo; so với 7 vùng
 đọc từ sơ đồ mặt bằng chính thức (Phụ lục~\ref{app:cairo-zones}), chỉ số ARI đạt \textbf{0,75}, trong
@@ -96,6 +112,21 @@ Bảng~\ref{tab:rq1-cairo} chi tiết theo hoạt động trên Cairo. Các bữ
 \textbf{Uống thuốc của R2 chỉ đạt 0,11} với M1: đây là hoạt động rất ngắn (trung vị 1,2 phút), diễn ra
 ở đúng cảm biến bếp và cùng khung giờ với bữa sáng. ``Rời nhà'' (\texttt{Leave\_Home}) gần như không
 nhận ra được vì hầu như không có sự kiện chuyển động nào trong lúc vắng nhà.
+
+\textbf{Random Forest dựa vào thông tin gì?} Hình~\ref{fig:rf-imp} cộng mức quan trọng
+(mục~\ref{sec:bg-rf}) của các đặc trưng theo nhóm, cho mô hình M1 huấn luyện trên Cairo. Hai đặc trưng giờ
+trong ngày ($\sin$, $\cos$) chiếm 0,43 tổng mức quan trọng --- nhiều hơn cả 27 đặc trưng tần suất cảm biến
+cộng lại (0,40). Nói cách khác, mô hình dựa rất nhiều vào \emph{lúc nào} và chỉ sau đó mới đến \emph{ở đâu}.
+Đặc trưng ``nhảy xa'' chỉ đóng góp 0,02. Kết quả này giải thích hai hiện tượng ở các mục sau: thói quen giả
+nằm sát thói quen thật (mục~\ref{sec:exp-rq2}), và M1 không phát hiện được ngày bỏ thuốc vì ``bếp, khoảng 7
+giờ'' vẫn còn nguyên khi chỉ việc uống thuốc bị bỏ (mục~\ref{sec:exp-rq3}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{rf_importance_cairo}
+\caption{Mức quan trọng (giảm Gini) của từng nhóm đặc trưng trong M1 trên Cairo.}
+\label{fig:rf-imp}
+\end{figure}
 
 \section{RQ2 -- Thói quen của từng người}
 \label{sec:exp-rq2}
@@ -169,6 +200,41 @@ phần lớn là đúng (precision 0,64--0,75), nhưng nó chỉ tìm được 1
 Tulum1 --- hai nhà mà hoạt động của hai người chồng lấn mạnh trong cùng vùng bếp --- precision của B0 cũng
 giảm còn 0,25--0,33. Ngay ở nhà một người, M1+H và M2+H vẫn vượt B0 (0,50--0,59 so với 0,29--0,38): đơn
 vị ``phiên trong vùng'' quá thô cho thói quen gắn với \emph{hoạt động}.
+
+\section{Độ ổn định qua nhiều lần chia theo thời gian}
+\label{sec:exp-rolling}
+
+Các kết quả trên dựa trên một lần chia 60/40. Để biết chúng có phụ thuộc vào lần chia đó không, ba nhà hai
+người được đánh giá lại theo kiểu \emph{rolling-origin}: huấn luyện trên mọi ngày trước một mốc, kiểm tra trên
+20\% số ngày kế tiếp, với các mốc 40\%, 60\% và 80\% (ba tập kiểm tra không chồng nhau). Mỗi lần chia, toàn bộ
+quy trình --- cấu trúc nhà, chọn ngưỡng, huấn luyện, thói quen đáp án --- được làm lại từ đầu. Tulum2 có hai
+lần chia do giới hạn thời gian tính toán (mỗi lần khoảng 30 phút vì Bi-GRU).
+
+\input{tables/rolling}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{rolling}
+\caption{F1 thói quen của từng lần chia (chấm) và trung bình (gạch ngang) trên ba nhà hai người.}
+\label{fig:rolling}
+\end{figure}
+
+Bảng~\ref{tab:rolling} và Hình~\ref{fig:rolling} cho ba nhận xét.
+\begin{itemize}
+  \item \textbf{Dao động giữa các lần chia là lớn.} Mỗi tập kiểm tra chỉ có 11--28 ngày và một số lần chia
+  chỉ có 3--7 thói quen đáp án, nên một thói quen khớp hay không khớp đã làm F1 thay đổi đáng kể; độ lệch
+  chuẩn lên tới 0,24. Vì vậy các con số đơn lẻ ở mục~\ref{sec:exp-rq2} cần được đọc kèm độ dao động này.
+  \item \textbf{Kết luận chính vẫn giữ.} M1+H đạt F1 trung bình 0,57 so với 0,26 của B0. Ghép cặp theo
+  (nhà, lần chia), M1+H cao hơn B0 ở 7/8 lần chia, trung bình cao hơn 0,31 (kiểm định Wilcoxon có dấu,
+  $p = 0{,}016$); cao hơn B1 ở 7/8 lần chia ($p = 0{,}023$). B0 có lần chia đạt F1 bằng 0 (Tulum1): khi các
+  thói quen bị gộp, phương pháp theo vùng có thể không tìm được thói quen nào đúng.
+  \item \textbf{Khoảng cách giữa các mô hình học nhỏ hơn.} M1+H cao hơn B2+H ở 6/8 lần chia (một lần hòa),
+  nhưng chỉ trung bình 0,05 ($p = 0{,}047$); khác biệt giữa M1+H và M2+H không có ý nghĩa thống kê
+  ($p = 0{,}25$; M2+H tốt hơn ở Tulum1, kém hơn ở Cairo và Tulum2). Nói cách khác, bước nhảy lớn nằm ở việc
+  \emph{chuyển từ ``vùng'' sang ``(người, hoạt động)''}; lựa chọn mô hình cụ thể là thứ yếu.
+\end{itemize}
+Với tám cặp quan sát, kiểm định có lực thấp; các giá trị $p$ chỉ nên xem là bằng chứng bổ sung cho xu hướng
+nhất quán ở Hình~\ref{fig:rolling}.
 
 \section{Phân tích lỗi lan truyền}
 \label{sec:exp-prop}
@@ -259,8 +325,9 @@ luyện dao động quá rộng (thuốc sáng khoảng 08:06--10:25; thuốc t�
 \textbf{Kết quả} (Bảng~\ref{tab:rq3}, Hình~\ref{fig:rq3}):
 \begin{itemize}
   \item \textbf{B0-vùng và M1 không bao giờ báo động.} Khi xóa sự kiện uống thuốc, vùng bếp vẫn có người
-  (bữa sáng), nên B0-vùng luôn thấy ``bình thường''. M1 cũng vẫn ``thấy'' uống thuốc: Random Forest học
-  ngữ cảnh ``bếp, khoảng 7 giờ'' chứ không học dấu hiệu riêng của việc uống thuốc. Đây chính là lỗi có
+  (bữa sáng), nên B0-vùng luôn thấy ``bình thường''. M1 cũng vẫn ``thấy'' uống thuốc: như Hình~\ref{fig:rf-imp} cho thấy, Random
+  Forest dựa chủ yếu vào giờ trong ngày và vùng, tức ngữ cảnh ``bếp, khoảng 7 giờ'', chứ không học dấu
+  hiệu riêng của việc uống thuốc. Đây chính là lỗi có
   hệ thống đã nói ở mục~\ref{sec:exp-rq2}.
   \item \textbf{M2 phát hiện 9/10 ngày bỏ thuốc} (tổng qua 5 lần cài; recall 0,90) nhưng báo động nhầm
   0,54 lần mỗi ngày.
@@ -285,7 +352,8 @@ hiện ``vắng mặt'' đòi hỏi mô hình dựa vào dấu hiệu riêng c�
   giá theo thời gian; mô hình học vượt tra bảng ở mọi nhà. Hoạt động ngắn, trùng chỗ (uống thuốc) và hoạt
   động ít sự kiện (rời nhà) là khó nhất.
   \item[RQ2] Dù nhận dạng theo sự kiện còn thấp, thói quen tìm được vẫn tốt hơn hẳn phương pháp theo vùng:
-  F1 0,50--0,71 (M1+H) so với 0,22--0,33 ở nhà hai người, và đủ 6/6 thói quen gắn người ở Cairo. Thói quen
+  F1 0,50--0,71 (M1+H) so với 0,22--0,33 ở nhà hai người, và đủ 6/6 thói quen gắn người ở Cairo; qua tám
+  lần chia, M1+H cao hơn B0 ở 7/8 lần ($p = 0{,}016$). Thói quen
   \emph{chịu được} lệch giờ nhỏ và nhận thừa ngẫu nhiên, nhưng \emph{nhạy} với bỏ sót, nhầm người và lỗi
   có hệ thống.
   \item[RQ3] Có thể phát hiện ngày bỏ thuốc ở mức nhất định (M2: recall 0,9), nhưng báo động nhầm còn cao;
@@ -298,8 +366,9 @@ hiện ``vắng mặt'' đòi hỏi mô hình dựa vào dấu hiệu riêng c�
   yếu dựa trên Cairo.
   \item \emph{Nhãn thưa}: Cairo chỉ gán nhãn khoảng 2,5 giờ mỗi ngày; một thói quen ``giả'' có thể là thói
   quen thật mà người chú thích không ghi.
-  \item \emph{Một lần chia dữ liệu}: kết quả dựa trên một lần chia 60/40 theo thời gian; chưa có khoảng tin
-  cậy theo nhiều lần chia (dự kiến bổ sung ở bản v2).
+  \item \emph{Số ngày kiểm tra ít}: kết quả chính dựa trên một lần chia 60/40; đánh giá qua nhiều lần chia
+  (mục~\ref{sec:exp-rolling}) cho thấy xu hướng giữ nguyên nhưng độ dao động lớn, và chỉ làm cho ba nhà hai
+  người với tám lần chia.
   \item \emph{Gán nhãn cho cụm B0, B1 dùng nhãn tập kiểm tra}: có lợi cho baseline; so sánh vì thế thận trọng.
   \item \emph{Bất thường được cài}: ngày bỏ thuốc thật có thể để lại dấu vết khác (ví dụ không mở tủ thuốc
   nhưng vẫn vào bếp lâu hơn).

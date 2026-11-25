@@ -36,21 +36,21 @@ Các kết quả chính:
 \begin{itemize}
   \item \textbf{Dữ liệu}: chỉ có ba nhà hai người, nhãn gắn người ít (đánh giá ``từng người'' chủ yếu dựa
   trên Cairo), nhãn thưa và dữ liệu thu từ 2009--2011 ở Mỹ.
-  \item \textbf{Đánh giá}: một lần chia dữ liệu theo thời gian; chưa có khoảng tin cậy qua nhiều lần chia;
-  mẫu của RQ3 nhỏ và bất thường là bất thường được cài.
+  \item \textbf{Đánh giá}: số ngày kiểm tra mỗi lần chia ít nên kết quả dao động lớn; đánh giá qua nhiều lần
+  chia mới làm cho ba nhà hai người; mẫu của RQ3 nhỏ và bất thường là bất thường được cài.
   \item \textbf{Phương pháp}: bộ nhận dạng chưa được tối ưu cho mục tiêu thói quen (ít bỏ sót, ít lỗi có hệ
   thống); bước giải mã còn đơn giản.
 \end{itemize}
 
 \section{Hướng phát triển}
 
-\textbf{Trong phạm vi khóa luận (các bản tiếp theo):}
+\textbf{Hướng phát triển trực tiếp của khóa luận:}
 \begin{enumerate}
-  \item Đánh giá qua nhiều lần chia theo thời gian (cửa sổ trượt) để có khoảng tin cậy và kiểm định thống kê.
+  \item Mở rộng đánh giá qua nhiều lần chia cho cả năm nhà và với dữ liệu dài hơn, để thu hẹp độ dao động.
   \item Giảm thói quen giả: giải mã có xét thời lượng hoạt động, ràng buộc ``mỗi người mỗi ngày tối đa một
   lần thức dậy'', hoặc hiệu chỉnh ngưỡng theo mục tiêu thói quen thay vì F1 theo sự kiện.
-  \item Phân tích lỗi có hệ thống: đo xem nhầm lẫn nào (uống thuốc $\leftrightarrow$ ăn sáng, R1
-  $\leftrightarrow$ R2) sinh thói quen giả.
+  \item Giảm phụ thuộc vào giờ trong ngày của bộ nhận dạng (Hình~\ref{fig:rf-imp}), ví dụ bằng đặc trưng
+  mô tả chuỗi chuyển động thay cho giờ, để mô hình nhận ra cả sự \emph{vắng mặt} của một hoạt động.
   \item Mở rộng dữ liệu nếu xin được: ARAS~\cite{alemdar2013aras}, CASAS Kyoto/twor.
 \end{enumerate}
 

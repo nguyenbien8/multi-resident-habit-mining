@@ -304,6 +304,5 @@ def run_rolling(name: str, out_root: Path = Path("results"), models=("B2", "M1",
             rows.append(_match_row(f"{m}+H", mine_habits(occ, test, source=m, **hcfg), ref, extra))
         _log(f"{name} lần chia {k}: {len(train)}/{len(test)} ngày, {len(ref)} thói quen đáp án; " +
              ", ".join(f"{r['source']} {r['f1']:.2f}" for r in rows if r["fold"] == k), log_fh)
-    df = pd.DataFrame(rows)
-    df.to_csv(out / "rolling.csv", index=False)
-    return df
+        pd.DataFrame(rows).to_csv(out / "rolling.csv", index=False)   # ghi sau mỗi lần chia
+    return pd.DataFrame(rows)

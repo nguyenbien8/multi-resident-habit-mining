@@ -105,3 +105,11 @@ def test_inject_and_detect():
     assert sum(truth.values()) == 2
     s = score(truth, truth, 10)
     assert s["f1"] == 1.0 and s["false_alarms_per_day"] == 0
+
+
+def test_report_rounding_half_up():
+    from mrhabits.report import _pm, _r2
+    assert _r2(0.625) == "0.63"            # không làm tròn kiểu "chẵn gần nhất"
+    assert _r2(2 * (10 / 21) * (10 / 11) / (10 / 21 + 10 / 11)) == "0.63"   # 0,6249999… do dấu phẩy động
+    assert _r2(0.5946) == "0.59"
+    assert _pm(0.39, 0.1) == "0{,}39 $\\pm$ 0{,}10"

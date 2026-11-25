@@ -1,0 +1,10 @@
+group,importance,n_features
+Khoảng cách tới sự kiện trước,0.009092620202806875,1
+Cảm biến hiện tại,0.014744903873453515,27
+Tỉ lệ nhảy xa,0.02004548613521043,1
+Cuối tuần,0.020960571010564547,1
+Số cảm biến phân biệt,0.022933976889559407,1
+Vùng hiện tại,0.03149882147920424,6
+Độ dài cửa sổ,0.053126078247644544,1
+Tần suất mỗi cảm biến trong cửa sổ,0.39783993822351876,27
+"Giờ trong ngày (sin, cos)",0.42975760393803764,2

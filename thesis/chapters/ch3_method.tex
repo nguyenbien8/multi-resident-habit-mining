@@ -90,6 +90,31 @@ Duyệt ứng viên theo $N$ giảm dần, nhận $c^\ast$ nếu cách mọi tâ
 
 Độ phức tạp là $O(|G| \cdot n)$ với $|G| = 288$, đủ nhanh cho mọi nhà (dưới một giây).
 
+\textbf{Ví dụ minh họa.} Xét hoạt động ``uống thuốc'' trong $D = 10$ ngày, với $w = 30$ phút và
+$\phi = 0{,}5$. Giờ bắt đầu ghi được là: 07:02, 07:10, 06:55, 07:20, (không có), 07:05, 08:40, 07:15,
+(không có), 06:58. Bảng~\ref{tab:scan-example} cho số ngày $N(c)$ tại một số tâm trên lưới.
+
+\begin{table}[htbp]
+\centering
+\caption{Số ngày $N(c)$ có lần uống thuốc bắt đầu trong $[c - 30', c + 30']$ ở ví dụ minh họa}
+\label{tab:scan-example}
+\small
+\begin{tabular}{lcccccccc}
+\toprule
+Tâm $c$ & 06:30 & 06:35 & 06:40 & 06:45 & 06:50--07:25 & 07:30 & 07:35 & 08:40 \\
+\midrule
+$N(c)$ & 2 & 4 & 5 & 6 & 7 & 5 & 4 & 1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Các tâm đạt $N(c) \ge 5$ tạo thành một đoạn liên tục 06:40--07:30. Trong đoạn này, $N$ đạt cực đại 7
+trên cả khoảng 06:50--07:25, nên tâm được chọn là điểm lưới ở giữa khoảng hòa, $c^\ast = $ 07:10. Mỗi ngày
+lấy lần gần tâm nhất trong $[06{:}40, 07{:}40]$: lần 08:40 của ngày thứ bảy nằm ngoài cửa sổ nên không được
+tính. Kết quả là một thói quen ``uống thuốc'' có giờ điển hình (trung bình vòng tròn của bảy lần) 07:06, tần
+suất $7/10 = 0{,}7$. Nếu dùng DBSCAN, lần 08:40 không ảnh hưởng ở ví dụ này; nhưng khi có thêm vài lần ở
+07:45, 08:10, 08:30, DBSCAN sẽ nối dần cụm tới 08:40, còn quét cửa sổ vẫn giữ khung không rộng quá một giờ.
+
 \section{Tổng quan quy trình}
 \label{sec:m-overview}
 
@@ -175,6 +200,20 @@ số vùng chọn theo khoảng cách trị riêng trong khoảng 3--10. Vùng �
 pháp thực tập. Trên Cairo, phân vùng tự động khớp với phân vùng đọc từ sơ đồ chính
 thức~\cite{casas2025floorplans} ở mức ARI được báo cáo trong Chương~\ref{chap:exp}.
 
+Hình~\ref{fig:topology} là kết quả trên Cairo. Không dùng bất kỳ thông tin vị trí nào, thủ tục vẫn tách
+đúng các khu vực của căn nhà: năm cảm biến bếp (M019--M022, M024) thành một vùng; ba cảm biến tầng hầm
+(M025--M027) thành một vùng chỉ nối với phần còn lại qua cầu thang; các cảm biến tầng trên thành hai vùng.
+Cạnh giữa bếp và phòng ngủ tầng trên không còn xuất hiện, nên khoảng cách hop giữa hai nơi phản ánh đúng
+việc phải đi qua cầu thang.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{topology_cairo}
+\caption{Đồ thị kề cảm biến của Cairo rút ra từ dữ liệu huấn luyện (nhãn đỉnh là số hiệu cảm biến M0xx),
+tô màu theo vùng do phân cụm phổ chọn.}
+\label{fig:topology}
+\end{figure}
+
 \section{Nhận dạng (người, hoạt động)}
 \label{sec:m-rec}
 
@@ -191,13 +230,36 @@ Mọi bộ nhận dạng chỉ nhìn \emph{quá khứ}: cửa sổ kết thúc t
 bằng tần suất trên dữ liệu huấn luyện. Đây là baseline không học đặc trưng: nó chỉ biết ``ở đâu, lúc
 nào'' --- đúng thông tin mà phương pháp thực tập dùng.
 
-\textbf{M1 --- Random Forest.} Với cửa sổ $W = 20$ sự kiện kết thúc tại $e_i$, đặc trưng gồm:
-tỉ lệ số lần mỗi cảm biến xuất hiện trong cửa sổ; cảm biến hiện tại (one-hot); vùng hiện tại; $\sin$ và
-$\cos$ của giờ; cờ cuối tuần; độ dài cửa sổ (log giây); khoảng cách tới sự kiện trước (log giây); số
-cảm biến phân biệt; và \textbf{tỉ lệ ``nhảy xa''} --- số cặp sự kiện liên tiếp cách nhau dưới 10 giây
-nhưng ở hai cảm biến cách $\ge 3$ bước trên đồ thị kề. Đặc trưng cuối cùng là dấu hiệu trực tiếp cho
-thấy có hơn một người đang hoạt động. Mô hình là rừng 150 cây~\cite{breiman2001rf}, mỗi lá ít nhất 3
-mẫu, trọng số lớp cân bằng theo từng mẫu bootstrap, nhiều đầu ra.
+\textbf{M1 --- Random Forest.} Mỗi sự kiện $e_i$ được mô tả bằng cửa sổ $W = 20$ sự kiện kết thúc tại
+nó, qua các nhóm đặc trưng ở Bảng~\ref{tab:features}. Ngoài các đặc trưng ``ở đâu, lúc nào'' quen thuộc,
+khóa luận thêm \textbf{tỉ lệ ``nhảy xa''}: số cặp sự kiện liên tiếp cách nhau dưới 10 giây nhưng ở hai cảm
+biến cách $\ge 3$ bước trên đồ thị kề, chia cho $W$. Một người không thể đi ba phòng trong vài giây, nên
+nhảy xa là dấu hiệu trực tiếp cho thấy có hơn một người đang hoạt động --- ý tưởng ``dùng vị trí để tách
+người'' của Chen~\cite{chen2021fcmcpd}, ở đây dùng làm đặc trưng thay vì làm luật cứng. Mô hình là rừng 150
+cây~\cite{breiman2001rf}, mỗi lá ít nhất 3 mẫu, xét $\sqrt d$ đặc trưng mỗi nút, trọng số lớp cân bằng theo
+từng mẫu bootstrap, nhiều đầu ra (một đầu ra nhị phân cho mỗi hoạt động).
+
+\begin{table}[htbp]
+\centering
+\caption{Đặc trưng của M1 cho mỗi sự kiện ($|\mathcal S|$: số cảm biến; $Z$: số vùng)}
+\label{tab:features}
+\small
+\begin{tabular}{p{5.2cm}cp{7.2cm}}
+\toprule
+Nhóm đặc trưng & Số chiều & Ý nghĩa \\
+\midrule
+Tần suất mỗi cảm biến trong cửa sổ & $|\mathcal S|$ & người (hoặc hai người) vừa đi qua những đâu \\
+Cảm biến hiện tại (one-hot) & $|\mathcal S|$ & vị trí của sự kiện đang xét \\
+Vùng hiện tại (one-hot) & $Z$ & vị trí ở mức ``phòng'' \\
+$\sin$, $\cos$ của giờ & 2 & thời điểm trong ngày, liên tục qua nửa đêm \\
+Cờ cuối tuần & 1 & nhịp sinh hoạt ngày nghỉ \\
+Độ dài cửa sổ ($\log$ giây) & 1 & mức độ dồn dập của chuyển động \\
+Khoảng cách tới sự kiện trước ($\log$ giây) & 1 & đang hoạt động hay vừa yên lặng \\
+Số cảm biến phân biệt & 1 & đi lại nhiều nơi hay ở yên một chỗ \\
+Tỉ lệ nhảy xa & 1 & dấu hiệu có hơn một người hoạt động \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \textbf{M2 --- Bi-GRU.} Chuỗi $W = 30$ sự kiện gần nhất; mỗi bước gồm vector nhúng 16 chiều của cảm
 biến và ba đặc trưng thời gian ($\sin$, $\cos$ của giờ, $\log(1+\Delta t)/5$). Một lớp GRU hai chiều

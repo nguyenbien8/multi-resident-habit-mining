@@ -16,5 +16,4 @@
 | `figures/`, `tables/` | **Tự sinh** bằng `python -m mrhabits.cli figures`; không sửa tay |
 | `references.bib` | Tài liệu tham khảo |
 
-Logo trường: thêm ảnh logo UET vào `figures/uet_logo.png`, rồi bỏ dấu `%` ở dòng `\includegraphics` trong
-`frontmatter/cover.tex`.
+Logo trường có sẵn ở `figures/uet_logo.png`, dùng trên bìa (`frontmatter/cover.tex`).

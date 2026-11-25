@@ -12,7 +12,8 @@ pháp của đề tài thực tập), một baseline tra bảng, Random Forest v
 CASAS, đánh giá theo thứ tự thời gian. Trên ba nhà hai người, nhận dạng (người, hoạt động) rồi áp định
 nghĩa thói quen đạt F1 thói quen 0,50--0,71 (Random Forest), so với 0,22--0,33 của phương pháp theo vùng;
 ở nhà Cairo, mô hình tìm đủ 6/6 thói quen gắn với từng người, kể cả thói quen uống thuốc vốn trùng giờ và
-trùng cảm biến với bữa sáng. Phân tích lỗi lan truyền bằng cách làm nhiễu nhãn có kiểm soát cho thấy thói
+trùng cảm biến với bữa sáng; qua tám lần chia theo thời gian, Random Forest cao hơn phương pháp theo vùng ở 7/8
+lần (kiểm định Wilcoxon, $p = 0{,}016$). Phân tích lỗi lan truyền bằng cách làm nhiễu nhãn có kiểm soát cho thấy thói
 quen chịu được lệch giờ nhỏ và nhận thừa ngẫu nhiên, nhưng nhạy với bỏ sót, nhầm người và lỗi có hệ
 thống. Thí nghiệm phát hiện ngày bỏ thuốc trên dữ liệu có cài bất thường cho thấy Bi-GRU phát hiện được
 9/10 ngày nhưng còn nhiều báo động nhầm, trong khi cách tiếp cận theo vùng không phát hiện được ngày nào.
@@ -33,7 +34,8 @@ method), a lookup baseline, Random Forest and Bi-GRU --- on five CASAS homes und
 On the three two-resident homes, recognising (resident, activity) and then applying the habit definition
 reaches a habit F1 of 0.50--0.71 (Random Forest) versus 0.22--0.33 for the zone-based approach; in the
 Cairo home it recovers all 6/6 per-resident habits, including a medication habit that shares its time and
-sensors with breakfast. A controlled label-corruption analysis shows that habits tolerate small time
+sensors with breakfast; across eight chronological splits, Random Forest beats the zone-based approach in 7 of 8
+(Wilcoxon signed-rank test, $p = 0.016$). A controlled label-corruption analysis shows that habits tolerate small time
 shifts and random false positives but are sensitive to missed occurrences, resident swaps and systematic
 errors. In a missed-medication detection experiment with injected anomalies, Bi-GRU detects 9 of 10
 skipped days at the cost of frequent false alarms, while the zone-based approach detects none.
